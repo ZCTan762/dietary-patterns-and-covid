@@ -1,0 +1,5 @@
+# Ignore visual studio code files
+.vscode/
+
+# Ignore instructions file
+*.pdf
