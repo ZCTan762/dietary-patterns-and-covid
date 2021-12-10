@@ -3,3 +3,6 @@
 
 # Ignore instructions file
 *.pdf
+
+# Mac formatting file to ignore
+.DF_Store
