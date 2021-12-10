@@ -5,4 +5,4 @@
 *.pdf
 
 # Mac formatting file to ignore
-.DF_Store
+.DS_Store
