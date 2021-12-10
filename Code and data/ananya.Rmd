@@ -7,11 +7,6 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r: Read in data files }
-
-
-
-```
 ```{r}
 # % of food intake (kg) in countries around the world
 food_supply_o <- read.csv("Food_Supply_Quantity_kg_Data.csv")
@@ -30,7 +25,6 @@ protein_intake <- protein_intake_o[, c(2:24)]
 ```
 
 ```{r renaming columns }
-
 #defining the function to output new columns names 
 rename_columns <- function(prefix, dataframe){
   new_names <- c()
@@ -50,7 +44,6 @@ colnames(protein_intake) <- rename_columns("protein_",protein_intake)
 
 
 ```{r}
-
 # cbind function to combine dfs
 combined <- cbind(food_supply, kcal_intake, fat_intake, protein_intake)
 names(combined)
