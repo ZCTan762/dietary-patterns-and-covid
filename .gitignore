@@ -6,3 +6,6 @@
 
 # Mac formatting file to ignore
 .DS_Store
+
+# Ignore original datasets
+Code and data/*.csv
