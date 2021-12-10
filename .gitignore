@@ -8,4 +8,4 @@
 .DS_Store
 
 # Ignore original datasets
-Code and data/*.csv
+# Code and data/*.csv
