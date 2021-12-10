@@ -1,24 +1,35 @@
+---
+title: "Final Project"
+output: html_document
+---
 
-# Read in data files 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
+```{r: Read in data files }
+
+
+
+```
+```{r}
 # % of food intake (kg) in countries around the world
 food_supply_o <- read.csv("Food_Supply_Quantity_kg_Data.csv")
-
 # % of energy intake (kcal) from different types of food in countries around the world. 
 kcal_intake_o <- read.csv("Food_Supply_kcal_Data.csv")
-
 # % of fat intake from different types of food in countries around the world
 fat_intake_o <- read.csv("Fat_Supply_Quantity_Data.csv")
-
 # % of protein intake from different types of food in countries around the world
 protein_intake_o <- read.csv("Protein_Supply_Quantity_Data.csv")
-
 
 # Select only some columns
 food_supply <- food_supply_o[, c(2:31)]
 kcal_intake <- kcal_intake_o[, c(2:24)]
 fat_intake <- fat_intake_o[, c(2:24)]
 protein_intake <- protein_intake_o[, c(2:24)]
+```
+
+```{r renaming columns }
 
 #defining the function to output new columns names 
 rename_columns <- function(prefix, dataframe){
@@ -35,6 +46,10 @@ colnames(kcal_intake) <- rename_columns("kcal_",kcal_intake)
 colnames(fat_intake) <- rename_columns("fat_",fat_intake)
 colnames(protein_intake) <- rename_columns("protein_",protein_intake)
 
+```
+
+
+```{r}
 
 # cbind function to combine dfs
 combined <- cbind(food_supply, kcal_intake, fat_intake, protein_intake)
@@ -43,4 +58,7 @@ ncol(combined)
 
 # dataf[, c(1, 2, 3)]
 # dataf[, c('A', 'B', 'Cost')]
+
+head(combined)
+```
 
