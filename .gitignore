@@ -9,3 +9,6 @@
 
 # Ignore original datasets
 # Code and data/*.csv
+
+# Ignore RStudio env file
+# Code and data/.Rhistory
