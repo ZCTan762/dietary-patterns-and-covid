@@ -74,16 +74,44 @@ combined_numeric <- combined[,-25]
 cor_matrix <- cor(combined_numeric, method = c("pearson"))
 write.csv(round(cor_matrix, 3), file = "cormatrix.csv")
 
+### Drop correlated variables
+cor_drop_list <- c('Milk...Excluding.Butter', 'kcal_Alcoholic.Beverages', 
+                   'protein_Alcoholic.Beverages', 'kcal_Animal.fats', 'fat_Animal.fats',
+                   'protein_Animal.fats', 'protein_Milk...Excluding.Butter', 
+                   'protein_Animal.Products', 'kcal_Milk...Excluding.Butter',
+                   'kcal_Animal.Products', 'kcal_Aquatic.Products..Other',
+                   'fat_Aquatic.Products..Other', 'protein_Aquatic.Products..Other',
+                   'protein_Cereals...Excluding.Beer','kcal_Cereals...Excluding.Beer',
+                   'kcal_Eggs', 'kcal_Fish..Seafood', 'kcal_Fruits...Excluding.Wine',
+                   'kcal_Meat', 'kcal_Miscellaneous', 'kcal_Offals', 'kcal_Oilcrops', 
+                   'kcal_Pulses', 'kcal_Spices', 'kcal_Starchy.Roots', 'kcal_Sugar.Crops', 
+                   'kcal_Treenuts', 'kcal_Vegetal.Products', 'kcal_Vegetables', 'fat_Eggs',
+                   'fat_Fish..Seafood', 'fat_Miscellaneous', 'fat_Offals', 'fat_Oilcrops',
+                   'fat_Pulses', 'fat_Starchy.Roots', 'fat_Sugar.Crops', 'fat_Treenuts',
+                   'fat_Vegetable.Oils','fat_Vegetables', 'protein_Eggs', 'protein_Fish..Seafood',
+                   'protein_Fruits...Excluding.Wine', 'protein_Meat', 'protein_Offals',
+                   'protein_Pulses', 'protein_Spices', 'protein_Starchy.Roots', 
+                   'protein_Stimulants', 'protein_Sugar.Crops', 'protein_Treenuts',
+                   'protein_Vegetables','protein_Miscellaneous','kcal_Vegetable.Oils',
+                   'fat_Spices','kcal_Stimulants','fat_Animal.Products',
+                   'fat_Alcoholic.Beverages','protein_Vegetal.Products')
+combined <- combined[ , !names(combined) %in% cor_drop_list]
+combined_numeric <- combined_numeric[ , !names(combined_numeric) %in% cor_drop_list]
+
+# Check correlation once more 
+cor_matrix <- cor(combined_numeric, method = c("pearson"))
+write.csv(round(cor_matrix, 3), file = "cormatrix2.csv")
 
 ##################### WORKS TILL HERE #####################
 
 
 # Separate out the target
-target = combined[,c(26)]
-predictors = combined[,-26]
+target = combined[,c(25)]
+predictors = combined[,-25]
 
-# Perform PCA -  
-pca=prcomp(pca_data, scale=TRUE)
+# Perform PCA
+predictors_numeric = predictors[,-25]
+pca=prcomp(predictors_numeric, scale=TRUE)
 summary(pca)
 
 # Scree plot for PCA - Good for report
