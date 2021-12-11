@@ -42,7 +42,6 @@ colnames(protein_intake) <- rename_columns("protein_",protein_intake)
 
 ```
 
-
 ```{r}
 # cbind function to combine dfs
 combined <- cbind(food_supply, kcal_intake, fat_intake, protein_intake)
@@ -54,4 +53,44 @@ ncol(combined)
 
 head(combined)
 ```
+
+```{r Treating Undernourished}
+
+combined$Undernourished=ifelse(combined$Undernourished=="<2.5",1.5, combined$Undernourished)
+
+#convert char to numeric
+combined$Undernourished = as.numeric(combined$Undernourished)
+
+# Treat Undernourished - Replace all '<2.5' with 1.5. And divide into 3 bins by value
+combined$Undernourished <- cut(combined$Undernourished, breaks = 3, labels = c("Low", "Mid", "High"))
+
+# Move NA  
+combined$Undernourished <- factor(ifelse(is.na(combined$Undernourished), 
+                                         "No Data", paste(combined$Undernourished)), 
+                                  levels = c(levels(combined$Undernourished), "No Data"))
+```
+
+
+```{r Processing null values}
+#creating a dataframe for count of nulls in each column in the combined dataframe 
+nulls <- colSums(is.na(combined))
+na_count <- data.frame( nulls)
+
+#dropping active, confirmed, recovered
+drop_list <- c('Active', 'Recovered', 'Confirmed')
+combined <- combined[ , !names(combined) %in% drop_list]
+
+#dropping null values from target variable 
+library(tidyr)
+combined <- combined %>% drop_na('Deaths')
+
+#check for nulls 
+nulls <- colSums(is.na(combined))
+na_count <- data.frame( nulls)
+
+library(dplyr)
+na_count %>% filter(nulls > 0)
+```
+
+
 
