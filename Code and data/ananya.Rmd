@@ -17,9 +17,9 @@ fat_intake_o <- read.csv("Fat_Supply_Quantity_Data.csv")
 # % of protein intake from different types of food in countries around the world
 protein_intake_o <- read.csv("Protein_Supply_Quantity_Data.csv")
 
-# Select only some columns
-country <- food_supply_o[, 1]
-food_supply <- food_supply_o[, c(2:31)]
+# Select only required columns
+#country <- food_supply_o[, 1]
+food_supply <- food_supply_o[, c(1:31)]
 kcal_intake <- kcal_intake_o[, c(2:24)]
 fat_intake <- fat_intake_o[, c(2:24)]
 protein_intake <- protein_intake_o[, c(2:24)]
@@ -55,7 +55,7 @@ ncol(combined)
 head(combined)
 ```
 
-```{r Treating Undernourished}
+```{r Transforming Undernourished Variable}
 
 combined$Undernourished=ifelse(combined$Undernourished=="<2.5",1.5, combined$Undernourished)
 
@@ -66,9 +66,9 @@ combined$Undernourished = as.numeric(combined$Undernourished)
 combined$Undernourished <- cut(combined$Undernourished, breaks = 3, labels = c("Low", "Mid", "High"))
 
 # Move NA  
-combined$Undernourished <- factor(ifelse(is.na(combined$Undernourished), 
-                                         "No Data", paste(combined$Undernourished)), 
-                                  levels = c(levels(combined$Undernourished), "No Data"))
+# combined$Undernourished <- factor(ifelse(is.na(combined$Undernourished), 
+#                                          "No Data", paste(combined$Undernourished)), 
+#                                   levels = c(levels(combined$Undernourished), "No Data"))
 ```
 
 
@@ -91,11 +91,18 @@ na_count <- data.frame( nulls)
 
 library(dplyr)
 na_count %>% filter(nulls > 0)
+
+
+#data with labels
+full_data <- combined
+#data without labels for modelling
+combined <- subset(combined,select = -c(Country))
 ```
 
 ```{r Correlation}
-##Exclude Undernourished column for numerical analyses
-combined_numeric <- combined[,-25]
+##Exclude Undernourished and Country names column for numerical analyses
+#combined_numeric <- combined[,-25]
+combined_numeric <- subset(combined,select = -c(Undernourished))
 
 # Create correlation matrix
 cor_matrix <- cor(combined_numeric, method = c("pearson"))
@@ -139,15 +146,51 @@ library(ggplot2)
 ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
     geom_tile(color = "black") +
   scale_fill_gradientn(colors = hcl.colors(20, "RdYlGn")) +
-  coord_fixed()
+  coord_fixed() +  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 5), axis.text.y = element_text( size = 5))
 
 ```
-```{r IGNORE}
-ggplot(data = combined, aes(y=Deaths, x=protein_Eggs)) + 
-  geom_point()
+```{r Histogram: }
+library(ggthemes)
+ggplot(data = combined, aes(x=Deaths)) + 
+  geom_histogram(colour="black", fill="grey") + geom_vline(aes(xintercept=mean(Deaths)),
+            color="red", linetype="dashed", size=0.5) + theme_economist() 
 ```
 
-```{r Random Forest - Model}
+```{r Target Variable Transformation}
+#adding Deaths as a categorical variable 
+library(Hmisc)
+combined$Deaths_cat <- cut2(combined$Deaths, g=3, labels = c("Low Risk", "Medium Risk", "High Risk"))
+combined$Deaths_cat <- as.character(combined$Deaths_cat)
+
+combined$Deaths_cat[combined$Deaths_cat == "[0.00000,0.00456)"] <- "Low Risk"
+combined$Deaths_cat[combined$Deaths_cat == "[0.00456,0.05095)"] <- "Medium Risk"
+combined$Deaths_cat[combined$Deaths_cat == "[0.05095,0.18543]"] <- "High Risk"
+
+combined$Deaths_cat <- as.factor(combined$Deaths_cat)
+
+# Drop deaths column
+drop_list <- c('Deaths')
+combined <- combined[ , !names(combined) %in% drop_list]
+```
+
+
+```{r Random Forest Classification: Building and Testing the model}
+set.seed(100)
+# Train test
+library(caTools)
+sample = sample.split(combined$Deaths_cat, SplitRatio = .7)
+train = subset(combined, sample == TRUE)
+test  = subset(combined, sample == FALSE)
+
+# Build model with training data
+testforest=randomForest(Deaths_cat~., data=train, ntree=1000,importance=TRUE, na.action = na.omit)
+
+library(caret)
+confusionMatrix(predicted_score, test$Deaths_cat)    # For classification forest
+```
+
+
+```{r Random Forest Regression: Building the Model}
 library(randomForest)
 myforest=randomForest(Deaths~., data=combined, ntree=1000,importance=TRUE, na.action = na.omit)
 myforest
@@ -159,12 +202,9 @@ pred_importance <- data.frame(importance(myforest))
 varImpPlot(myforest)
 pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
 pred_importance
-
-
 ```
 
-```{r Random Foresting: Selecting Predictors}
-
+```{r Random Forest Regression: Selecting Predictors}
 #calculating  variable importance 10 times 
 x <- list()
 
@@ -209,7 +249,7 @@ colnames(avg_importance2) <- "Updated Average Variable Importance"
 ```
 
 
-```{r Random Forest: Predictions}
+```{r Random Forest Regression: Predictions}
 # Train test
 require(caTools)
 sample = sample.split(combined$Deaths, SplitRatio = .5)
@@ -237,7 +277,7 @@ mean((predicted_score - target)^2)
 ```
 
 
-```{r Principal Component Analysis}
+```{r Principal Component Analysis - TO REVIEW}
 
 # Perform PCA
 predictors_numeric = predictors[,-25]
@@ -272,6 +312,8 @@ par(mfrow=c(1,1))
 library(ggfortify)
 autoplot(pca, data = pca_data, loadings = TRUE, col="grey", loadings.label = TRUE )
 ```
+
+
 
 ```{r LDA/QDA Setup}
 
@@ -322,12 +364,66 @@ partimat2 = partimat(combined$Deaths_cat~combined$Obesity+combined$Alcoholic.Bev
 partimat2
 ```
 
-
-```{r Multiple LDA Model}
+```{r TO DO: Multiple LDA Model}
 lda = lda(Deaths~., data=combined)
 lda
 ```
 
+```{r K-Means Clustering}
+#can countries be clustered into groups
+#do these clusters have specific characters 
+# how does it compare to income group clusters (does income group of a category impact death rate)
+
+head(full_data)
+```
+
+```{r Visualizing Data and Distance}
+
+#can improve this graph with labelling country color -- income group
+library(ggplot2)
+library(ggthemes)
+plot=ggplot(full_data,aes(y=Deaths, x=Obesity, label =Country))
+plot+geom_point(alpha = 0.6) +  theme_economist() 
+#+geom_text(aes(label=full_data$Country))
+
+
+```
+
+
+```{r K-Means: Data Preprocessing}
+rownames(combined) <- full_data$Country
+head(combined)
+
+#check for nulls 
+nulls <- colSums(is.na(combined))
+na_count <- data.frame( nulls)
+
+library(dplyr)
+na_count %>% filter(nulls > 0)
+
+#create dummies 
+#question: should dummies be standardized for kmeans
+
+#dummifying undernourished 
+table(combined$Undernourished)
+
+
+#standardizing values 
+
+
+
+
+
+
+#reducing dimensions (select relevant predictors)
+
+
+
+```
+
+```{r K-Means Modelling}
+
+```
 
 
 
