@@ -102,7 +102,15 @@ combined_numeric <- combined_numeric[ , !names(combined_numeric) %in% cor_drop_l
 cor_matrix <- cor(combined_numeric, method = c("pearson"))
 write.csv(round(cor_matrix, 3), file = "cormatrix2.csv")
 
-##################### WORKS TILL HERE #####################
+# Plot correlation heatmap
+library(ggplot2)
+library(reshape2)
+melted_cormat <- melt(cor_matrix)
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile(color = "black") +
+  scale_fill_gradientn(colors = hcl.colors(20, "RdYlGn")) +
+  coord_fixed()
+
 
 ### Random Forest - find importance
 library(randomForest)
@@ -149,30 +157,39 @@ for (i in 1:10)
 # Find average
 rowMeans(cbind(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]], x[[7]], x[[8]], x[[9]], x[[10]]))
 
+# Split target into 3 bins
+library(Hmisc)
+combined$Deaths_cat <- cut2(combined$Deaths, g=3, labels = c("Low Risk", "Medium Risk", "High Risk"))
+combined$Deaths_cat <- as.character(combined$Deaths_cat)
+combined$Deaths_cat[combined$Deaths_cat == "[0.00000,0.00456)"] <- "Low Risk"
+combined$Deaths_cat[combined$Deaths_cat == "[0.00456,0.05095)"] <- "Medium Risk"
+combined$Deaths_cat[combined$Deaths_cat == "[0.05095,0.18543]"] <- "High Risk"
+combined$Deaths_cat <- as.factor(combined$Deaths_cat)
+
+# Drop deaths column
+drop_list <- c('Deaths')
+combined <- combined[ , !names(combined) %in% drop_list]
+
 # Train test
 require(caTools)
-sample = sample.split(combined$Deaths, SplitRatio = .5)
+sample = sample.split(combined$Deaths_cat, SplitRatio = .7)
 train = subset(combined, sample == TRUE)
 test  = subset(combined, sample == FALSE)
 
 # Build model with training data
-testforest=randomForest(Deaths~., data=train, ntree=1000,importance=TRUE, na.action = na.omit)
+testforest=randomForest(Deaths_cat~., data=train, ntree=1000,importance=TRUE, na.action = na.omit)
 
 # Run predictions
 predicted_score = predict(testforest, newdata=test)
-mean((predicted_score - test$Deaths)^2)
 
-# library(caret)
-# confusionMatrix(predicted_score, test$Deaths)
+mean((predicted_score - test$Deaths)^2)              # For regression forest
 
-# Separate out the target
-target = combined[,c(21)]
-#predictors = combined[,-21]
+library(caret)
+confusionMatrix(predicted_score, test$Deaths_cat)    # For classification forest
 
-# Run predictions
-predicted_score = predict(myforest, newdata=combined)
-mean((predicted_score - target)^2)
-
+# Importance (need to change others but I'm tired rn)
+test_importance <- importance(testforest)
+test_importance[order(test_importance[,4],decreasing=TRUE),]
 
 
 
