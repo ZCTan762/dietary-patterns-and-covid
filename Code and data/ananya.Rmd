@@ -269,6 +269,7 @@ plot(pve, ylim=c(0,1))
 plot(cumsum(pve), ylim=c(0,1))        # Cumulative sum
 par(mfrow=c(1,1))
 
+library(ggfortify)
 autoplot(pca, data = pca_data, loadings = TRUE, col="grey", loadings.label = TRUE )
 ```
 
@@ -288,8 +289,6 @@ combined$Deaths_cat <- cut(combined$Deaths, breaks = 3, labels = c("Low Risk", "
 prior_prob<-data.frame(table(combined$Deaths_cat)/nrow(combined))
 colnames(prior_prob) <- c("category", "probability")
 
-
-
 ```
 
 ```{r LDA/QDA: Probability Density Functions}
@@ -302,8 +301,7 @@ hist2 = ggplot(combined, aes(x=Alcoholic.Beverages)) + geom_histogram(bins = 40)
 hist2
 ```
 
-```{r LDA Model}
-
+```{r Basic LDA Model: Obesity and Alcoholic.Beverages}
 #install.packages("MASS")
 #install.packages("klaR")
 library(MASS)
@@ -316,16 +314,19 @@ partimat = partimat(combined$Deaths_cat~combined$Obesity+combined$Alcoholic.Beve
 partimat
 ```
 
-```{r QDA Model}
+```{r QDA Model: : Obesity and Alcoholic.Beverages}
 qda = qda(combined$Deaths_cat~combined$Obesity+combined$Alcoholic.Beverages)
 qda
 
 partimat2 = partimat(combined$Deaths_cat~combined$Obesity+combined$Alcoholic.Beverages, method="qda")
 partimat2
-
 ```
 
 
+```{r Multiple LDA Model}
+lda = lda(Deaths~., data=combined)
+lda
+```
 
 
 
