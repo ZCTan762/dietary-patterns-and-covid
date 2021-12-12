@@ -18,6 +18,7 @@ fat_intake_o <- read.csv("Fat_Supply_Quantity_Data.csv")
 protein_intake_o <- read.csv("Protein_Supply_Quantity_Data.csv")
 
 # Select only some columns
+country <- food_supply_o[, 1]
 food_supply <- food_supply_o[, c(2:31)]
 kcal_intake <- kcal_intake_o[, c(2:24)]
 fat_intake <- fat_intake_o[, c(2:24)]
@@ -98,14 +99,6 @@ combined_numeric <- combined[,-25]
 
 # Create correlation matrix
 cor_matrix <- cor(combined_numeric, method = c("pearson"))
-
-# library(reshape2)
-# melted_cormat <- melt(cor_matrix)
-# head(melted_cormat)
-# 
-# library(ggplot2)
-# ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
-#   geom_tile()
 ```
 
 ```{r Drop correlated variables}
@@ -133,7 +126,7 @@ cor_drop_list <- c('Milk...Excluding.Butter', 'kcal_Alcoholic.Beverages',
 combined_numeric <- combined_numeric[ , !names(combined_numeric) %in% cor_drop_list]
 ```
 
-```{r}
+```{r Correlation Heatmap}
 # Create correlation matrix
 cor_matrix <- cor(combined_numeric, method = c("pearson"))
 
@@ -141,9 +134,201 @@ library(reshape2)
 melted_cormat <- melt(cor_matrix)
 head(melted_cormat)
 
+#plotting correlation heat map
 library(ggplot2)
 ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
-  geom_tile()
+    geom_tile(color = "black") +
+  scale_fill_gradientn(colors = hcl.colors(20, "RdYlGn")) +
+  coord_fixed()
 
 ```
+```{r IGNORE}
+ggplot(data = combined, aes(y=Deaths, x=protein_Eggs)) + 
+  geom_point()
+```
+
+```{r Random Forest - Model}
+library(randomForest)
+myforest=randomForest(Deaths~., data=combined, ntree=1000,importance=TRUE, na.action = na.omit)
+myforest
+
+#MSE: 0.001294334
+```
+```{r Random Forest: Variable Importance}
+pred_importance <- data.frame(importance(myforest))
+varImpPlot(myforest)
+pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
+pred_importance
+
+
+```
+
+```{r Random Foresting: Selecting Predictors}
+
+#calculating  variable importance 10 times 
+x <- list()
+
+for (i in 1:10)
+{
+  myforest=randomForest(Deaths~., data=combined, ntree=1000,importance=TRUE, na.action = na.omit)
+  
+  pred_importance <- importance(myforest)
+  pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
+  x[[i]] <- pred_importance[,1]
+}
+# Finding average
+avg_importance = data.frame(rowMeans(cbind(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]], x[[7]], x[[8]], x[[9]], x[[10]])))
+colnames(avg_importance) <- "Average Variable Importance"
+
+#threshold: 
+
+## Drop insignificant predictors 
+rf_drop_list <- c('fat_Fruits...Excluding.Wine', 'Starchy.Roots', 
+                  'Aquatic.Products..Other','fat_Sugar...Sweeteners','Offals',
+                  'Fruits...Excluding.Wine')
+                   
+combined <- combined[ , !names(combined) %in% rf_drop_list]
+combined_numeric <- combined_numeric[ , !names(combined_numeric) %in% rf_drop_list]
+
+## Find importance again
+x <- list()
+
+for (i in 1:10)
+{
+  myforest=randomForest(Deaths~., data=combined, ntree=1000,importance=TRUE, na.action = na.omit)
+  
+  pred_importance <- importance(myforest)
+  pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
+  x[[i]] <- pred_importance[,1]
+}
+
+# Find average
+avg_importance2 = data.frame(rowMeans(cbind(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]], x[[7]], x[[8]], x[[9]], x[[10]])))
+colnames(avg_importance2) <- "Updated Average Variable Importance"
+
+```
+
+
+```{r Random Forest: Predictions}
+# Train test
+require(caTools)
+sample = sample.split(combined$Deaths, SplitRatio = .5)
+train = subset(combined, sample == TRUE)
+test  = subset(combined, sample == FALSE)
+
+# Build model with training data
+testforest=randomForest(Deaths~., data=train, ntree=1000,importance=TRUE, na.action = na.omit)
+
+# Run predictions
+predicted_score = predict(testforest, newdata=test)
+mean((predicted_score - test$Deaths)^2)
+
+# library(caret)
+# confusionMatrix(predicted_score, test$Deaths)
+
+# Separate out the target
+target = combined[,c(21)]
+predictors = combined[,-21]
+
+# Run predictions
+predicted_score = predict(myforest, newdata=combined)
+mean((predicted_score - target)^2)
+
+```
+
+
+```{r Principal Component Analysis}
+
+# Perform PCA
+predictors_numeric = predictors[,-25]
+pca=prcomp(predictors_numeric, scale=TRUE)
+summary(pca)
+
+# Scree plot for PCA - Good for report
+plot(pca, type = "l", main = "Scree plot for PCA")
+
+### The first 2 components explain only 32% of variance. Use correlation matrix 
+### to shave down first instead.
+
+# Find variable importance through PCA (only numeric)
+
+# PC1
+loading_Scores_PC1 <- pca$rotation[,1]       # describe how much each attribute contributes to the principal component
+influence_PC1 <- abs(loading_Scores_PC1)     # rank in order of influence, ignore negative/positive influence
+influence_PC1ranked <- names(sort(influence_PC1,decreasing = T))    # Output components of PC in order of in
+
+# PC2
+loading_Scores_PC2 <- pca$rotation[,2]       # describe how much each attribute contributes to the principal component
+influence_PC2 <- abs(loading_Scores_PC2)     # rank in order of influence, ignore negative/positive influence
+influence_PC2ranked <- names(sort(influence_PC2,decreasing = T))    # Output components of PC in order of in
+
+# % variance explained
+pve=(pca$sdev^2)/sum(pca$sdev^2)
+par(mfrow=c(1,2))
+plot(pve, ylim=c(0,1))
+plot(cumsum(pve), ylim=c(0,1))        # Cumulative sum
+par(mfrow=c(1,1))
+
+autoplot(pca, data = pca_data, loadings = TRUE, col="grey", loadings.label = TRUE )
+```
+
+```{r LDA/QDA Setup}
+
+#histogram
+ggplot(data = combined, aes(x=Deaths))  + 
+  geom_histogram()
+
+#turning the target variable into categorical variable
+summary(combined$Deaths)
+
+# Treat Undernourished - Replace all '<2.5' with 1.5. And divide into 3 bins by value
+combined$Deaths_cat <- cut(combined$Deaths, breaks = 3, labels = c("Low Risk", "Medium Risk", "High Risk"))
+
+#calculating prior probabilities
+prior_prob<-data.frame(table(combined$Deaths_cat)/nrow(combined))
+colnames(prior_prob) <- c("category", "probability")
+
+
+
+```
+
+```{r LDA/QDA: Probability Density Functions}
+#performing LDA on the following two predictors: obesity, Alcoholic.Beverages
+#plot histogram
+hist1 = ggplot(combined, aes(x=Obesity)) + geom_histogram(bins = 40) + facet_grid(combined$Deaths_cat)
+hist1
+
+hist2 = ggplot(combined, aes(x=Alcoholic.Beverages)) + geom_histogram(bins = 40) + facet_grid(combined$Deaths_cat)
+hist2
+```
+
+```{r LDA Model}
+
+#install.packages("MASS")
+#install.packages("klaR")
+library(MASS)
+library(klaR)
+
+lda = lda(combined$Deaths_cat~combined$Obesity+combined$Alcoholic.Beverages)
+lda
+
+partimat = partimat(combined$Deaths_cat~combined$Obesity+combined$Alcoholic.Beverages)
+partimat
+```
+
+```{r QDA Model}
+qda = qda(combined$Deaths_cat~combined$Obesity+combined$Alcoholic.Beverages)
+qda
+
+partimat2 = partimat(combined$Deaths_cat~combined$Obesity+combined$Alcoholic.Beverages, method="qda")
+partimat2
+
+```
+
+
+
+
+
+
+
 
