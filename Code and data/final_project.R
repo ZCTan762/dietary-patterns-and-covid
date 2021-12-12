@@ -104,10 +104,82 @@ write.csv(round(cor_matrix, 3), file = "cormatrix2.csv")
 
 ##################### WORKS TILL HERE #####################
 
+### Random Forest - find importance
+library(randomForest)
+myforest=randomForest(Deaths~., data=combined, ntree=1000,importance=TRUE, na.action = na.omit)
+
+pred_importance <- importance(myforest)
+pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
+
+# test <- pred_importance[,1]
+x <- list()
+
+for (i in 1:10)
+{
+  myforest=randomForest(Deaths~., data=combined, ntree=1000,importance=TRUE, na.action = na.omit)
+  
+  pred_importance <- importance(myforest)
+  pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
+  x[[i]] <- pred_importance[,1]
+}
+
+# Find average
+rowMeans(cbind(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]], x[[7]], x[[8]], x[[9]], x[[10]]))
+
+## Drop insignificant predictors
+rf_drop_list <- c('fat_Fruits...Excluding.Wine', 'Starchy.Roots', 
+                  'Aquatic.Products..Other','fat_Sugar...Sweeteners','Offals',
+                  'Fruits...Excluding.Wine')
+                   
+combined <- combined[ , !names(combined) %in% rf_drop_list]
+combined_numeric <- combined_numeric[ , !names(combined_numeric) %in% rf_drop_list]
+
+## Find importance again
+x <- list()
+
+for (i in 1:10)
+{
+  myforest=randomForest(Deaths~., data=combined, ntree=1000,importance=TRUE, na.action = na.omit)
+  
+  pred_importance <- importance(myforest)
+  pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
+  x[[i]] <- pred_importance[,1]
+}
+
+# Find average
+rowMeans(cbind(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]], x[[7]], x[[8]], x[[9]], x[[10]]))
+
+# Train test
+require(caTools)
+sample = sample.split(combined$Deaths, SplitRatio = .5)
+train = subset(combined, sample == TRUE)
+test  = subset(combined, sample == FALSE)
+
+# Build model with training data
+testforest=randomForest(Deaths~., data=train, ntree=1000,importance=TRUE, na.action = na.omit)
+
+# Run predictions
+predicted_score = predict(testforest, newdata=test)
+mean((predicted_score - test$Deaths)^2)
+
+# library(caret)
+# confusionMatrix(predicted_score, test$Deaths)
 
 # Separate out the target
-target = combined[,c(25)]
-predictors = combined[,-25]
+target = combined[,c(21)]
+#predictors = combined[,-21]
+
+# Run predictions
+predicted_score = predict(myforest, newdata=combined)
+mean((predicted_score - target)^2)
+
+
+
+
+
+
+
+
 
 # Perform PCA
 predictors_numeric = predictors[,-25]
