@@ -92,5 +92,58 @@ library(dplyr)
 na_count %>% filter(nulls > 0)
 ```
 
+```{r Correlation}
+##Exclude Undernourished column for numerical analyses
+combined_numeric <- combined[,-25]
 
+# Create correlation matrix
+cor_matrix <- cor(combined_numeric, method = c("pearson"))
+
+# library(reshape2)
+# melted_cormat <- melt(cor_matrix)
+# head(melted_cormat)
+# 
+# library(ggplot2)
+# ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+#   geom_tile()
+```
+
+```{r Drop correlated variables}
+cor_drop_list <- c('Milk...Excluding.Butter', 'kcal_Alcoholic.Beverages', 
+                   'protein_Alcoholic.Beverages', 'kcal_Animal.fats', 'fat_Animal.fats',
+                   'protein_Animal.fats', 'protein_Milk...Excluding.Butter', 
+                   'protein_Animal.Products', 'kcal_Milk...Excluding.Butter',
+                   'kcal_Animal.Products', 'kcal_Aquatic.Products..Other',
+                   'fat_Aquatic.Products..Other', 'protein_Aquatic.Products..Other',
+                   'protein_Cereals...Excluding.Beer','kcal_Cereals...Excluding.Beer',
+                   'kcal_Eggs', 'kcal_Fish..Seafood', 'kcal_Fruits...Excluding.Wine',
+                   'kcal_Meat', 'kcal_Miscellaneous', 'kcal_Offals', 'kcal_Oilcrops', 
+                   'kcal_Pulses', 'kcal_Spices', 'kcal_Starchy.Roots', 'kcal_Sugar.Crops', 
+                   'kcal_Treenuts', 'kcal_Vegetal.Products', 'kcal_Vegetables', 'fat_Eggs',
+                   'fat_Fish..Seafood', 'fat_Miscellaneous', 'fat_Offals', 'fat_Oilcrops',
+                   'fat_Pulses', 'fat_Starchy.Roots', 'fat_Sugar.Crops', 'fat_Treenuts',
+                   'fat_Vegetable.Oils','fat_Vegetables', 'protein_Eggs', 'protein_Fish..Seafood',
+                   'protein_Fruits...Excluding.Wine', 'protein_Meat', 'protein_Offals',
+                   'protein_Pulses', 'protein_Spices', 'protein_Starchy.Roots', 
+                   'protein_Stimulants', 'protein_Sugar.Crops', 'protein_Treenuts',
+                   'protein_Vegetables','protein_Miscellaneous','kcal_Vegetable.Oils',
+                   'fat_Spices','kcal_Stimulants','fat_Animal.Products',
+                   'fat_Alcoholic.Beverages','protein_Vegetal.Products')
+
+combined_numeric <- combined_numeric[ , !names(combined_numeric) %in% cor_drop_list]
+```
+
+```{r}
+# Create correlation matrix
+cor_matrix <- cor(combined_numeric, method = c("pearson"))
+
+library(reshape2)
+melted_cormat <- melt(cor_matrix)
+head(melted_cormat)
+
+library(ggplot2)
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile()
+
+```
 
