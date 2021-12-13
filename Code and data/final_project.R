@@ -116,55 +116,84 @@ ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) +
 library(randomForest)
 myforest=randomForest(Deaths~., data=combined, ntree=1000,importance=TRUE, na.action = na.omit)
 
-pred_importance <- importance(myforest)
-pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
-
-# Run importance tests 10 times and find average values
+### Identify variable importance
 x <- list()
-for (i in 1:10)
+y <- list()
+for (j in 1:10)
 {
-  myforest=randomForest(Deaths~., data=combined, ntree=1000,importance=TRUE, na.action = na.omit)
-  
-  pred_importance <- importance(myforest)
-  pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
-  x[[i]] <- pred_importance[,1]
+  for (i in 1:20)
+  {
+    impforest_r=randomForest(combined$Deaths~., data=combined, ntree=(500+(j*50)),importance=TRUE, na.action = na.omit)
+    
+    pred_importance <- importance(impforest_r)
+    pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
+    x[[i]] <- pred_importance[,1]
+  }
+  y[[j]] <- rowMeans(cbind(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]], x[[7]], x[[8]], x[[9]], 
+                           x[[10]], x[[11]], x[[12]], x[[13]], x[[14]], x[[15]], x[[16]],
+                           x[[17]], x[[18]], x[[19]], x[[20]]))
 }
 
-# Find average
-rowMeans(cbind(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]], x[[7]], x[[8]], x[[9]], x[[10]]))
+sort(rowMeans(cbind(y[[1]], y[[2]], y[[3]], y[[4]], y[[5]], y[[6]], y[[7]], y[[8]], y[[9]], 
+                    y[[10]])),decreasing = T)
 
-## Drop insignificant predictors
-rf_drop_list <- c('fat_Fruits...Excluding.Wine', 'Starchy.Roots', 
-                  'Aquatic.Products..Other','fat_Sugar...Sweeteners','Offals',
-                  'Fruits...Excluding.Wine')
-                   
-combined <- combined[ , !names(combined) %in% rf_drop_list]
-combined_numeric <- combined_numeric[ , !names(combined_numeric) %in% rf_drop_list]
+### Drop insignificant predictors
+rf_drop_list <- c('Undernourished', 'Stimulants', 'fat_Meat', 'Aquatic.Products..Other',
+                      'fat_Sugar...Sweeteners','fat_Stimulants', 'Offals', 'Population',
+                      'Fruits...Excluding.Wine','Aquatic.Products..Other', 'Vegetables',
+                      'Starchy.Roots')
 
-## Find importance again
+combined_filtered <- combined[ , !names(combined) %in% rf_drop_list]
+
+### APPROACH 2: Choose significant predictors
+combined_selected <- combined[,c("Deaths","Obesity","Oilcrops","Alcoholic.Beverages",
+                                 "Eggs","fat_Vegetal.Products","Animal.Products",
+                                 "Vegetal.Products","Animal.fats","protein_Vegetable.Oils")]
+
+
+### Find importance again
 x <- list()
-
-for (i in 1:10)
+y <- list()
+for (j in 1:10)
 {
-  myforest=randomForest(Deaths~., data=combined, ntree=1000,importance=TRUE, na.action = na.omit)
-  
-  pred_importance <- importance(myforest)
-  pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
-  x[[i]] <- pred_importance[,1]
+  for (i in 1:20)
+  {
+    impforest_r=randomForest(combined_selected$Deaths~., data=combined_selected, ntree=(500+(j*50)),importance=TRUE, na.action = na.omit)
+    
+    pred_importance <- importance(impforest_r)
+    pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
+    x[[i]] <- pred_importance[,1]
+  }
+  y[[j]] <- rowMeans(cbind(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]], x[[7]], x[[8]], x[[9]], 
+                           x[[10]], x[[11]], x[[12]], x[[13]], x[[14]], x[[15]], x[[16]],
+                           x[[17]], x[[18]], x[[19]], x[[20]]))
 }
 
-# Find average
-rowMeans(cbind(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]], x[[7]], x[[8]], x[[9]], x[[10]]))
+sort(rowMeans(cbind(y[[1]], y[[2]], y[[3]], y[[4]], y[[5]], y[[6]], y[[7]], y[[8]], y[[9]], 
+                    y[[10]])),decreasing = T)
 
-# Perform LDA on Obesity, Alcoholic.Beverages
-hist1 = ggplot(combined, aes(x=Obesity)) + geom_histogram(bins = 40) + facet_grid(combined$Deaths_cat)
-hist1
 
-# Train test split
+##### Testing - Regression Random Forest #####
+
 require(caTools)
-sample = sample.split(combined$Deaths, SplitRatio = .7)
-train = subset(combined, sample == TRUE)
-test  = subset(combined, sample == FALSE)
+require(caret)
+accuracy_list = rep(NA, 25)
+for (i in 1:25)
+{
+  # Train test split
+  sample = sample.split(combined_selected$Deaths, SplitRatio = .7)
+  train = subset(combined_selected, sample == TRUE)
+  test  = subset(combined_selected, sample == FALSE)
+  
+  # Build model with training data
+  testforest=randomForest(train$Deaths~., data=train, ntree=1000,importance=TRUE, na.action = na.omit)
+  
+  # Run predictions
+  predicted_score = predict(testforest, newdata=test)
+  accuracy_list[i] <- mean((predicted_score - test$Deaths)^2)
+  
+}
+mean(accuracy_list)
 
 
 
@@ -194,7 +223,7 @@ for (j in 1:10)
 {
   for (i in 1:20)
   {
-    impforest=randomForest(combinedcat$Deaths_cat~., data=combinedcat, ntree=1000,importance=TRUE, na.action = na.omit)
+    impforest=randomForest(combinedcat$Deaths_cat~., data=combinedcat, ntree=(500+(j*50)),importance=TRUE, na.action = na.omit)
     
     pred_importance <- importance(impforest)
     pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
@@ -230,7 +259,7 @@ for (j in 1:10)
 {
   for (i in 1:20)
   {
-    impforest=randomForest(combinedcat_selected$Deaths_cat~., data=combinedcat_selected, ntree=1000,importance=TRUE, na.action = na.omit)
+    impforest=randomForest(combinedcat_selected$Deaths_cat~., data=combinedcat_selected, ntree=(500+(j*50)),importance=TRUE, na.action = na.omit)
     
     pred_importance <- importance(impforest)
     pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
@@ -270,12 +299,18 @@ for (i in 1:25)
 mean(accuracy_list)
 
 
-# Variable importance
-test_importance <- importance(testforestcat)
-test_importance[order(test_importance[,4],decreasing=TRUE),]
+##### Gradient Boosting #####
 
+library(gbm)
 
+# distribution="gaussian"  is used for regression problems
+# interaction.depth=4  is the number of nodes in each tree
+boosted=gbm(train$Deaths_cat~., data = train,
+            distribution="bernoulli",n.trees=10000, interaction.depth=4)
+summary(boosted)
 
+predicted_score=predict(boosted, newdata=test, n.trees=10000)
+confusionMatrix(predicted_score, test$Deaths_cat)$overall['Accuracy']
 
 # LDA setup
 # prior_prob<-data.frame(table(combined$Deaths_cat)/nrow(combined))
