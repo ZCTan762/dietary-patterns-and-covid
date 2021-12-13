@@ -11,4 +11,5 @@
 # Code and data/*.csv
 
 # Ignore RStudio env file
-# Code and data/.Rhistory
+Code and data/.Rhistory
+Code and data/.RData
