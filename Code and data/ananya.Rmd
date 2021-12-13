@@ -58,17 +58,11 @@ head(combined)
 ```{r Transforming Undernourished Variable}
 
 combined$Undernourished=ifelse(combined$Undernourished=="<2.5",1.5, combined$Undernourished)
-
 #convert char to numeric
 combined$Undernourished = as.numeric(combined$Undernourished)
-
 # Treat Undernourished - Replace all '<2.5' with 1.5. And divide into 3 bins by value
 combined$Undernourished <- cut(combined$Undernourished, breaks = 3, labels = c("Low", "Mid", "High"))
 
-# Move NA  
-# combined$Undernourished <- factor(ifelse(is.na(combined$Undernourished), 
-#                                          "No Data", paste(combined$Undernourished)), 
-#                                   levels = c(levels(combined$Undernourished), "No Data"))
 ```
 
 
@@ -89,9 +83,8 @@ combined <- combined %>% drop_na('Deaths')
 nulls <- colSums(is.na(combined))
 na_count <- data.frame( nulls)
 
-library(dplyr)
+library(dplyr) 
 na_count %>% filter(nulls > 0)
-
 
 #data with labels
 full_data <- combined
@@ -154,39 +147,6 @@ library(ggthemes)
 ggplot(data = combined, aes(x=Deaths)) + 
   geom_histogram(colour="black", fill="grey") + geom_vline(aes(xintercept=mean(Deaths)),
             color="red", linetype="dashed", size=0.5) + theme_economist() 
-```
-
-```{r Target Variable Transformation}
-#adding Deaths as a categorical variable 
-library(Hmisc)
-combined$Deaths_cat <- cut2(combined$Deaths, g=3, labels = c("Low Risk", "Medium Risk", "High Risk"))
-combined$Deaths_cat <- as.character(combined$Deaths_cat)
-
-combined$Deaths_cat[combined$Deaths_cat == "[0.00000,0.00456)"] <- "Low Risk"
-combined$Deaths_cat[combined$Deaths_cat == "[0.00456,0.05095)"] <- "Medium Risk"
-combined$Deaths_cat[combined$Deaths_cat == "[0.05095,0.18543]"] <- "High Risk"
-
-combined$Deaths_cat <- as.factor(combined$Deaths_cat)
-
-# Drop deaths column
-drop_list <- c('Deaths')
-combined <- combined[ , !names(combined) %in% drop_list]
-```
-
-
-```{r Random Forest Classification: Building and Testing the model}
-set.seed(100)
-# Train test
-library(caTools)
-sample = sample.split(combined$Deaths_cat, SplitRatio = .7)
-train = subset(combined, sample == TRUE)
-test  = subset(combined, sample == FALSE)
-
-# Build model with training data
-testforest=randomForest(Deaths_cat~., data=train, ntree=1000,importance=TRUE, na.action = na.omit)
-
-library(caret)
-confusionMatrix(predicted_score, test$Deaths_cat)    # For classification forest
 ```
 
 
@@ -333,6 +293,46 @@ colnames(prior_prob) <- c("category", "probability")
 
 ```
 
+
+```{r Target Variable Transformation}
+#adding Deaths as a categorical variable 
+library(Hmisc)
+combined$Deaths_cat <- cut2(combined$Deaths, g=3, labels = c("Low Risk", "Medium Risk", "High Risk"))
+combined$Deaths_cat <- as.character(combined$Deaths_cat)
+
+table(combined$Deaths_cat)
+
+combined$Deaths_cat[combined$Deaths_cat == "[0.00000,0.00438)"] <- "Low Risk"
+combined$Deaths_cat[combined$Deaths_cat == "[0.00438,0.05095)"] <- "Medium Risk"
+combined$Deaths_cat[combined$Deaths_cat == "[0.05095,0.18543]"] <- "High Risk"
+
+combined$Deaths_cat <- as.factor(combined$Deaths_cat)
+
+# Drop deaths column
+drop_list <- c('Deaths')
+combined <- combined[ , !names(combined) %in% drop_list]
+```
+
+
+```{r Random Forest Classification: Building and Testing the model}
+set.seed(100)
+# Train test
+library(caTools)
+sample = sample.split(combined$Deaths_cat, SplitRatio = .7)
+train = subset(combined, sample == TRUE)
+test  = subset(combined, sample == FALSE)
+
+library(randomForest)
+# Build model with training data
+testforest=randomForest(Deaths_cat~., data=train, ntree=1000,importance=TRUE, na.action = na.omit)
+
+
+# Run predictions
+library(caret)
+predicted_value = predict(testforest, newdata=test)
+confusionMatrix(predicted_value, test$Deaths_cat)    # For classification forest
+```
+
 ```{r LDA/QDA: Probability Density Functions}
 #performing LDA on the following two predictors: obesity, Alcoholic.Beverages
 #plot histogram
@@ -377,15 +377,13 @@ lda
 head(full_data)
 ```
 
-```{r Visualizing Data and Distance}
-
+```{r Visualizing Data}
 #can improve this graph with labelling country color -- income group
 library(ggplot2)
 library(ggthemes)
 plot=ggplot(full_data,aes(y=Deaths, x=Obesity, label =Country))
 plot+geom_point(alpha = 0.6) +  theme_economist() 
 #+geom_text(aes(label=full_data$Country))
-
 
 ```
 
@@ -404,27 +402,74 @@ na_count %>% filter(nulls > 0)
 #create dummies 
 #question: should dummies be standardized for kmeans
 
-#dummifying undernourished 
+#dummifying undernourished & dropping the categorical variable
 table(combined$Undernourished)
+library(fastDummies)
+combined <- dummy_cols(combined, select_columns = 'Undernourished', remove_first_dummy = TRUE, remove_selected_columns = TRUE)
 
+#dummifying deaths_cat & dropping the categorical variable
+table(combined$Deaths_cat)
+
+combined <- dummy_cols(combined, select_columns = 'Deaths_cat', remove_first_dummy = TRUE, remove_selected_columns = TRUE)
+
+#check if the column type is numeric 
+col_type <- lapply(combined, class)
 
 #standardizing values 
+scaled.data <- scale(combined)
 
+# check that we get mean of 0 and sd of 1
+#colMeans(scaled.data)  # faster version of apply(scaled.dat, 2, mean)
+#apply(scaled.data, 2, sd)
 
-
-
-
-
-#reducing dimensions (select relevant predictors)
-
-
-
+#TO DO: reducing dimensions (cherry picking relevant predictors)
 ```
 
-```{r K-Means Modelling}
-
+```{r K-Means: Distance Matrix Visualization}
+library(factoextra)
+distance <- get_dist(scaled.data)
+fviz_dist(distance, gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"), lab_size = 3)
 ```
 
+```{r K-Means: Optimal Number of Clusters}
+set.seed(123)
+
+# function to compute total within-cluster sum of square 
+within_val <- function(k) {
+  kmeans(scaled.data, k, nstart = 10)$tot.withinss
+}
+
+# Compute and plot wss for k = 1 to k = 15
+k_vals <- seq(1, 15)
+
+# extract wss for 2-15 clusters
+wss_values <- c()
+
+for (i in k_vals){
+  new_val <- within_val(i)
+  wss_values <- c(wss_values, new_val)
+}
+
+#wss_values <- data.frame(k_vals, wss_values)
+plot(k_vals, wss_values,
+       type="b", pch = 19, frame = FALSE, 
+       xlab="Number of clusters K",
+       ylab="Total within-clusters sum of squares")
+
+#let's say the optimal number of clusters: 2 
+```
+
+```{r K-Means: Modelling }
+k2 <- kmeans(scaled.data, centers = 2, nstart = 25)
+str(k2)
+scaled.data$cluster=as.factor(k2$cluster) 
+```
+
+```{r}
+plot=ggplot(full_data,aes(y=Deaths, x=Obesity, label =Country))
+plot+geom_point(alpha = 0.6) +  theme_economist()
+plot+geom_point(aes(colour=scaled.data$cluster))
+```
 
 
 
