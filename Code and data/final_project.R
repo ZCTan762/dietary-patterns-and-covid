@@ -247,26 +247,28 @@ sort(rowMeans(cbind(y[[1]], y[[2]], y[[3]], y[[4]], y[[5]], y[[6]], y[[7]], y[[8
 
 ##### Testing - Categorical Random Forest #####
 
-for (i in 1:10)
-{
-  #cm$overall['Accuracy']
-}
-
-# Train test split
 require(caTools)
-sample = sample.split(combinedcat_selected$Deaths_cat, SplitRatio = .7)
-train = subset(combinedcat_selected, sample == TRUE)
-test  = subset(combinedcat_selected, sample == FALSE)
+require(caret)
+accuracy_list = rep(NA, 25)
+for (i in 1:25)
+{
+  # Train test split
+  sample = sample.split(combinedcat_selected$Deaths_cat, SplitRatio = .7)
+  train = subset(combinedcat_selected, sample == TRUE)
+  test  = subset(combinedcat_selected, sample == FALSE)
+  
+  # Build model with training data
+  testforestcat=randomForest(train$Deaths_cat~., data=train, ntree=1000,importance=TRUE, na.action = na.omit)
+  
+  # Run predictions
+  predicted_score = predict(testforestcat, newdata=test)
+  
+  #confusionMatrix(predicted_score, test$Deaths_cat)    # For classification forest
+  #cm$overall['Accuracy']
+  accuracy_list[i] <- confusionMatrix(predicted_score, test$Deaths_cat)$overall['Accuracy']
+}
+mean(accuracy_list)
 
-### Random Forest - Testing ###
-# Build model with training data
-testforestcat=randomForest(train$Deaths_cat~., data=train, ntree=1000,importance=TRUE, na.action = na.omit)
-
-# Run predictions
-predicted_score = predict(testforestcat, newdata=test)
-
-library(caret)
-confusionMatrix(predicted_score, test$Deaths_cat)    # For classification forest
 
 # Variable importance
 test_importance <- importance(testforestcat)
