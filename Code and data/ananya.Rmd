@@ -459,7 +459,7 @@ plot(k_vals, wss_values,
 #let's say the optimal number of clusters: 2 
 ```
 
-```{r K-Means: Modelling }
+```{r K-Means: Modelling - 2 clusters }
 k2 <- kmeans(scaled.data, centers = 2, nstart = 25)
 str(k2)
 scaled.data$cluster=as.factor(k2$cluster) 
@@ -472,5 +472,51 @@ plot+geom_point(aes(colour=scaled.data$cluster))
 ```
 
 
+```{r K-Means: Data Preprocessing}
+rownames(combined) <- full_data$Country
+head(combined)
 
+#check for nulls 
+nulls <- colSums(is.na(combined))
+na_count <- data.frame( nulls)
 
+library(dplyr)
+na_count %>% filter(nulls > 0)
+
+#create dummies 
+#question: should dummies be standardized for kmeans
+
+#dummifying undernourished & dropping the categorical variable
+table(combined$Undernourished)
+library(fastDummies)
+combined <- dummy_cols(combined, select_columns = 'Undernourished', remove_first_dummy = TRUE, remove_selected_columns = TRUE)
+
+#dummifying deaths_cat & dropping the categorical variable
+table(combined$Deaths_cat)
+
+combined <- dummy_cols(combined, select_columns = 'Deaths_cat', remove_first_dummy = TRUE, remove_selected_columns = TRUE)
+
+#check if the column type is numeric 
+col_type <- lapply(combined, class)
+
+#standardizing values 
+scaled.data <- scale(combined)
+
+# check that we get mean of 0 and sd of 1
+#colMeans(scaled.data)  # faster version of apply(scaled.dat, 2, mean)
+#apply(scaled.data, 2, sd)
+
+#TO DO: reducing dimensions (cherry picking relevant predictors)
+```
+
+```{r K-Means: Modelling - 6 clusters }
+k6 <- kmeans(scaled.data, centers = 6, nstart = 25)
+str(k6)
+scaled.data$cluster2=as.factor(k6$cluster) 
+```
+
+```{r}
+plot=ggplot(full_data,aes(y=Deaths, x=Obesity, label =Country))
+plot+geom_point(alpha = 0.6) +  theme_economist()
+plot+geom_point(aes(colour=scaled.data$cluster2))
+```
