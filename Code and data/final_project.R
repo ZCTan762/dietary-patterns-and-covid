@@ -21,7 +21,7 @@ fat_intake <- fat_intake_o[, c(2:24)]
 protein_intake <- protein_intake_o[, c(2:24)]
 
 
-# Defining the function to output new columns names 
+# Function to output new column names 
 rename_columns <- function(prefix, dataframe){
   new_names <- c()
   for (i in colnames(dataframe)){
@@ -32,7 +32,7 @@ rename_columns <- function(prefix, dataframe){
 }
 
 
-#renaming column names of the dataframes
+# Rename column names 
 colnames(kcal_intake) <- rename_columns("kcal_",kcal_intake)
 colnames(fat_intake) <- rename_columns("fat_",fat_intake)
 colnames(protein_intake) <- rename_columns("protein_",protein_intake)
@@ -41,23 +41,25 @@ colnames(protein_intake) <- rename_columns("protein_",protein_intake)
 # cbind function to combine dfs
 combined <- cbind(food_supply, kcal_intake, fat_intake, protein_intake)
 attach(combined)
-names(combined)
-ncol(combined)
+
+##### Preprocessing #####
 
 # Keep only Deaths as a target predictor
 drop_list <- c('Active', 'Recovered', 'Confirmed')
 combined <- combined[ , !names(combined) %in% drop_list]
 
 # check for nulls 
-nulls <- colSums(is.na(combined))
-na_count <- data.frame( nulls)
-na_count
+# nulls <- colSums(is.na(combined))
+# na_count <- data.frame( nulls)
+# na_count
 
 # Drop rows with NAs in target var
 library(tidyr)
-# TODO: Drop 1 NA observation in Obesity TEMP
-combined <- combined %>% drop_na('Deaths') %>% drop_na('Obesity')
 
+combined <- combined %>% drop_na('Deaths')
+
+# Exclude Undernourished column for numerical analyses
+combined_numeric <- combined[,-25]
 
 # Treat Undernourished - Replace all '<2.5' with 1.5 and divide into 3 bins by value
 combined$Undernourished=ifelse(combined$Undernourished=="<2.5",1.5, combined$Undernourished)
@@ -67,12 +69,9 @@ combined$Undernourished <- factor(ifelse(is.na(combined$Undernourished),
                                          "No Data", paste(combined$Undernourished)), 
                                   levels = c(levels(combined$Undernourished), "No Data"))
 
-### Exclude Undernourished column for numerical analyses
-combined_numeric <- combined[,-25]
-
 # Create correlation matrix
-cor_matrix <- cor(combined_numeric, method = c("pearson"))
-write.csv(round(cor_matrix, 3), file = "cormatrix.csv")
+# cor_matrix <- cor(combined_numeric, method = c("pearson"))
+# write.csv(round(cor_matrix, 3), file = "cormatrix.csv")
 
 ### Drop correlated variables
 cor_drop_list <- c('Milk...Excluding.Butter', 'kcal_Alcoholic.Beverages', 
@@ -99,8 +98,8 @@ combined <- combined[ , !names(combined) %in% cor_drop_list]
 combined_numeric <- combined_numeric[ , !names(combined_numeric) %in% cor_drop_list]
 
 # Check correlation once more 
-cor_matrix <- cor(combined_numeric, method = c("pearson"))
-write.csv(round(cor_matrix, 3), file = "cormatrix2.csv")
+# cor_matrix <- cor(combined_numeric, method = c("pearson"))
+# write.csv(round(cor_matrix, 3), file = "cormatrix2.csv")
 
 # Plot correlation heatmap
 library(ggplot2)
@@ -112,16 +111,16 @@ ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) +
   coord_fixed()
 
 
-### Random Forest - find importance
+##### Regression Random Forest #####
+
 library(randomForest)
 myforest=randomForest(Deaths~., data=combined, ntree=1000,importance=TRUE, na.action = na.omit)
 
 pred_importance <- importance(myforest)
 pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
 
-# test <- pred_importance[,1]
+# Run importance tests 10 times and find average values
 x <- list()
-
 for (i in 1:10)
 {
   myforest=randomForest(Deaths~., data=combined, ntree=1000,importance=TRUE, na.action = na.omit)
@@ -157,50 +156,133 @@ for (i in 1:10)
 # Find average
 rowMeans(cbind(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]], x[[7]], x[[8]], x[[9]], x[[10]]))
 
-# Split target into 3 bins
-library(Hmisc)
-combined$Deaths_cat <- cut2(combined$Deaths, g=3, labels = c("Low Risk", "Medium Risk", "High Risk"))
-combined$Deaths_cat <- as.character(combined$Deaths_cat)
-combined$Deaths_cat[combined$Deaths_cat == "[0.00000,0.00456)"] <- "Low Risk"
-combined$Deaths_cat[combined$Deaths_cat == "[0.00456,0.05095)"] <- "Medium Risk"
-combined$Deaths_cat[combined$Deaths_cat == "[0.05095,0.18543]"] <- "High Risk"
-combined$Deaths_cat <- as.factor(combined$Deaths_cat)
+# Perform LDA on Obesity, Alcoholic.Beverages
+hist1 = ggplot(combined, aes(x=Obesity)) + geom_histogram(bins = 40) + facet_grid(combined$Deaths_cat)
+hist1
 
-# Drop deaths column
-drop_list <- c('Deaths')
-combined <- combined[ , !names(combined) %in% drop_list]
-
-# Train test
+# Train test split
 require(caTools)
-sample = sample.split(combined$Deaths_cat, SplitRatio = .7)
+sample = sample.split(combined$Deaths, SplitRatio = .7)
 train = subset(combined, sample == TRUE)
 test  = subset(combined, sample == FALSE)
 
+
+
+##### Categorical Random Forest #####
+
+library(randomForest)
+combinedcat <- data.frame(combined)
+#tracemem(combinedcat)==tracemem(combined)
+
+# Split target into 3 bins
+library(Hmisc)
+combinedcat$Deaths_cat <- cut2(combinedcat$Deaths, g=3, labels = c("Low Risk", "Medium Risk", "High Risk"))
+combinedcat$Deaths_cat <- as.character(combinedcat$Deaths_cat)
+combinedcat$Deaths_cat[combinedcat$Deaths_cat == "[0.00000,0.00438)"] <- "Low Risk"
+combinedcat$Deaths_cat[combinedcat$Deaths_cat == "[0.00438,0.05095)"] <- "Medium Risk"
+combinedcat$Deaths_cat[combinedcat$Deaths_cat == "[0.05095,0.18543]"] <- "High Risk"
+combinedcat$Deaths_cat <- as.factor(combinedcat$Deaths_cat)
+
+# Drop deaths column
+drop_list <- c('Deaths')
+combinedcat <- combinedcat[ , !names(combinedcat) %in% drop_list]
+
+### Identify variable importance
+x <- list()
+y <- list()
+for (j in 1:10)
+{
+  for (i in 1:20)
+  {
+    impforest=randomForest(combinedcat$Deaths_cat~., data=combinedcat, ntree=1000,importance=TRUE, na.action = na.omit)
+    
+    pred_importance <- importance(impforest)
+    pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
+    x[[i]] <- pred_importance[,4]
+  }
+  y[[j]] <- rowMeans(cbind(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]], x[[7]], x[[8]], x[[9]], 
+                           x[[10]], x[[11]], x[[12]], x[[13]], x[[14]], x[[15]], x[[16]],
+                           x[[17]], x[[18]], x[[19]], x[[20]]))
+}
+
+sort(rowMeans(cbind(y[[1]], y[[2]], y[[3]], y[[4]], y[[5]], y[[6]], y[[7]], y[[8]], y[[9]], 
+                    y[[10]])),decreasing = T)
+
+### Drop insignificant predictors
+rf_drop_list_cat <- c('Undernourished', 'Stimulants', 'fat_Meat', 'Aquatic.Products..Other',
+                  'fat_Sugar...Sweeteners','fat_Stimulants', 'Offals', 'Population',
+                  'Fruits...Excluding.Wine','Aquatic.Products..Other', 'Vegetables',
+                  'Starchy.Roots')
+
+combinedcat_filtered <- combinedcat[ , !names(combinedcat) %in% rf_drop_list_cat]
+
+### APPROACH 2: Choose significant predictors
+combinedcat_selected <- combinedcat[,c("Deaths_cat","Obesity", "Animal.Products", "Animal.fats",
+                                       "Vegetal.Products","Eggs","Oilcrops","Fish..Seafood",
+                                       "fat_Milk...Excluding.Butter","kcal_Sugar...Sweeteners",
+                                       "Alcoholic.Beverages","Treenuts","fat_Vegetal.Products",
+                                       "fat_Cereals...Excluding.Beer")]
+
+### Find importance again
+x <- list()
+y <- list()
+for (j in 1:10)
+{
+  for (i in 1:20)
+  {
+    impforest=randomForest(combinedcat_selected$Deaths_cat~., data=combinedcat_selected, ntree=1000,importance=TRUE, na.action = na.omit)
+    
+    pred_importance <- importance(impforest)
+    pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
+    x[[i]] <- pred_importance[,4]
+  }
+  y[[j]] <- rowMeans(cbind(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]], x[[7]], x[[8]], x[[9]], 
+                           x[[10]], x[[11]], x[[12]], x[[13]], x[[14]], x[[15]], x[[16]],
+                           x[[17]], x[[18]], x[[19]], x[[20]]))
+}
+
+sort(rowMeans(cbind(y[[1]], y[[2]], y[[3]], y[[4]], y[[5]], y[[6]], y[[7]], y[[8]], y[[9]], 
+                    y[[10]])),decreasing = T)
+
+
+##### Testing - Categorical Random Forest #####
+
+for (i in 1:10)
+{
+  #cm$overall['Accuracy']
+}
+
+# Train test split
+require(caTools)
+sample = sample.split(combinedcat_selected$Deaths_cat, SplitRatio = .7)
+train = subset(combinedcat_selected, sample == TRUE)
+test  = subset(combinedcat_selected, sample == FALSE)
+
+### Random Forest - Testing ###
 # Build model with training data
-testforest=randomForest(Deaths_cat~., data=train, ntree=1000,importance=TRUE, na.action = na.omit)
+testforestcat=randomForest(train$Deaths_cat~., data=train, ntree=1000,importance=TRUE, na.action = na.omit)
 
 # Run predictions
-predicted_score = predict(testforest, newdata=test)
-
-mean((predicted_score - test$Deaths)^2)              # For regression forest
+predicted_score = predict(testforestcat, newdata=test)
 
 library(caret)
 confusionMatrix(predicted_score, test$Deaths_cat)    # For classification forest
 
-# Importance (need to change others but I'm tired rn)
-test_importance <- importance(testforest)
+# Variable importance
+test_importance <- importance(testforestcat)
 test_importance[order(test_importance[,4],decreasing=TRUE),]
 
 
 
 
-
+# LDA setup
+# prior_prob<-data.frame(table(combined$Deaths_cat)/nrow(combined))
+# colnames(prior_prob) <- c("category", "probability")
 
 
 
 # Perform PCA
-predictors_numeric = predictors[,-25]
-pca=prcomp(predictors_numeric, scale=TRUE)
+pca=prcomp(combined_numeric, scale=TRUE)
 summary(pca)
 
 # Scree plot for PCA - Good for report
