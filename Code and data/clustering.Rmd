@@ -1,0 +1,285 @@
+---
+title: "Clustering"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r Loading data}
+# % of food intake (kg) in countries around the world
+food_supply_o <- read.csv("Food_Supply_Quantity_kg_Data.csv")
+# % of energy intake (kcal) from different types of food in countries around the world. 
+kcal_intake_o <- read.csv("Food_Supply_kcal_Data.csv")
+# % of fat intake from different types of food in countries around the world
+fat_intake_o <- read.csv("Fat_Supply_Quantity_Data.csv")
+# % of protein intake from different types of food in countries around the world
+protein_intake_o <- read.csv("Protein_Supply_Quantity_Data.csv")
+
+# Select only required columns
+#country <- food_supply_o[, 1]
+food_supply <- food_supply_o[, c(1:31)]
+kcal_intake <- kcal_intake_o[, c(2:24)]
+fat_intake <- fat_intake_o[, c(2:24)]
+protein_intake <- protein_intake_o[, c(2:24)]
+```
+
+```{r Renaming columns }
+#defining the function to output new columns names 
+rename_columns <- function(prefix, dataframe){
+  new_names <- c()
+  for (i in colnames(dataframe)){
+    i = paste(prefix, i, sep = "")
+    new_names <- c(new_names, i)
+  }
+  return(new_names)
+}
+
+#renaming column names of the dataframes
+colnames(kcal_intake) <- rename_columns("kcal_",kcal_intake)
+colnames(fat_intake) <- rename_columns("fat_",fat_intake)
+colnames(protein_intake) <- rename_columns("protein_",protein_intake)
+```
+
+```{r Creating the final dataframe}
+# cbind function to combine dfs
+combined <- cbind(food_supply, kcal_intake, fat_intake, protein_intake)
+names(combined)
+ncol(combined)
+
+#creating index
+rownames(combined) <- food_supply_o[, 1]
+head(combined)
+```
+
+```{r Transforming Undernourished Variable}
+combined$Undernourished=ifelse(combined$Undernourished=="<2.5",1.5, combined$Undernourished)
+#convert char to numeric
+combined$Undernourished = as.numeric(combined$Undernourished)
+# Treat Undernourished - Replace all '<2.5' with 1.5. And divide into 3 bins by value
+combined$Undernourished <- cut(combined$Undernourished, breaks = 3, labels = c("Low", "Mid", "High"))
+```
+
+
+```{r Processing null values}
+#dropping active, confirmed, recovered
+drop_list <- c('Active', 'Recovered', 'Confirmed')
+combined <- combined[ , !names(combined) %in% drop_list]
+
+#dropping null values from target variable 
+library(tidyr)
+combined <- combined %>% drop_na('Deaths')
+
+#creating a dataframe for count of nulls in each column in the combined dataframe 
+nulls <- colSums(is.na(combined))
+na_count <- data.frame( nulls)
+
+library(dplyr) 
+na_count %>% filter(nulls > 0)
+
+#data with labels
+full_data <- combined
+
+#data without labels for modelling
+combined <- subset(combined,select = -c(Country))
+```
+
+
+
+```{r Target Variable Transformation}
+#adding Deaths as a categorical variable 
+library(Hmisc)
+combined$Deaths_cat <- cut2(combined$Deaths, g=3, labels = c("Low Risk", "Medium Risk", "High Risk"))
+combined$Deaths_cat <- as.character(combined$Deaths_cat)
+
+table(combined$Deaths_cat)
+
+combined$Deaths_cat[combined$Deaths_cat == "[0.00000,0.00438)"] <- "Low Risk"
+combined$Deaths_cat[combined$Deaths_cat == "[0.00438,0.05095)"] <- "Medium Risk"
+combined$Deaths_cat[combined$Deaths_cat == "[0.05095,0.18543]"] <- "High Risk"
+
+combined$Deaths_cat <- as.factor(combined$Deaths_cat)
+
+# Drop deaths column
+#drop_list <- c('Deaths')
+#combined <- combined[ , !names(combined) %in% drop_list]
+```
+
+
+```{r Function: K-Means Data Preprocessing}
+
+#defining a function that creates dummies and scales data
+kmeans_processing <- function(combined)
+{#dummifying undernourished & dropping the categorical variable
+library(fastDummies)
+if ('Undernourished' %in% colnames(combined)){
+combined <- dummy_cols(combined, select_columns = 'Undernourished', remove_first_dummy = TRUE, remove_selected_columns = TRUE)}
+
+  if ('Deaths_cat' %in% colnames(combined)){
+#dummifying deaths_cat & dropping the categorical variable
+combined <- dummy_cols(combined, select_columns = 'Deaths_cat', remove_first_dummy = TRUE, remove_selected_columns = TRUE)}
+
+#standardizing values 
+scaled.data <- scale(combined)
+
+return(scaled.data)}
+
+```
+
+
+```{r Function: Elbow Method Plot}
+#function for elbow method
+#input dataframe, 
+#print the plot
+
+elbow_plot <- function(dataframe){
+set.seed(123)
+# function to compute total within-cluster sum of square 
+within_val <- function(k) {
+  kmeans(dataframe, k, nstart = 10)$tot.withinss
+}
+
+# Compute and plot wss for k = 1 to k = 15
+k_vals <- seq(1, 15)
+
+# extract wss for 2-15 clusters
+wss_values <- c()
+
+for (i in k_vals){
+  new_val <- within_val(i)
+  wss_values <- c(wss_values, new_val)
+}
+
+#wss_df <- data.frame(k_vals, wss_values)
+plot(k_vals, wss_values,
+       type="b", pch = 19, frame = FALSE, 
+       xlab="Number of clusters K",
+       ylab="Total within-clusters sum of squares")
+
+}
+```
+
+```{r K-Means Function: Modelling}
+
+#function 
+#input dataframe, number of clusters 
+
+#output 1 - within cluster variation 
+
+kmeans_model <- function(dataframe, cluster_num)
+  {k <- kmeans(dataframe, centers = cluster_num, nstart = 25)
+#within cluster variation of data 
+  return(k)
+
+#paste0('Within cluster variation of data: ',round(k$tot.withinss,2))
+#dataframe$cluster=as.factor(k$cluster)
+} 
+
+```
+
+```{r K- Means Approach 1: Selecting Significant Predictors}
+combined_selected <- combined[,c("Deaths","Obesity","Oilcrops","Alcoholic.Beverages",
+                                 "Eggs","fat_Vegetal.Products","Animal.Products",
+                                 "Vegetal.Products","Animal.fats","protein_Vegetable.Oils")]
+
+combined_kmeans1 <- data.frame(kmeans_processing(combined_selected))
+
+elbow_plot(combined_kmeans1)
+
+#optimal clusters: 2 or 3
+```
+
+```{r K- Means Approach 1: 2 Clusters}
+k <- kmeans_model(combined_kmeans1, 2)
+
+paste0('Within cluster variation of data: ',round(k$tot.withinss,2))
+combined_kmeans1$cluster=as.factor(k$cluster)
+```
+
+
+
+```{r K- Means Approach 1: 2 Clusters Visualize}
+library(ggthemes)
+library(gridExtra)
+#col <- c('Obesity')
+
+plot_list <- list() 
+
+for (i in colnames(combined_kmeans1)){
+plot_list[[i]] <- ggplot(combined_kmeans1,aes_string(x=i, y = 'Deaths'))+
+  geom_point(alpha = 0.6) + 
+  geom_point(aes(colour=cluster))
+
+print(plot_list[[i]])
+}
+
+#grid.arrange(grobs=plot_list,ncol=2)
+```
+
+```{r K- Means Approach 1: 3 Clusters}
+k <- kmeans_model(combined_kmeans1, 3)
+
+paste0('Within cluster variation of data: ',round(k$tot.withinss,2))
+combined_kmeans1$cluster=as.factor(k$cluster)
+```
+
+```{r K- Means Approach 1: 3 Clusters Visualize}
+library(ggthemes)
+library(gridExtra)
+#col <- c('Obesity')
+
+plot_list <- list() 
+
+for (i in colnames(combined_kmeans1)){
+plot_list[[i]] <- ggplot(combined_kmeans1,aes_string(x=i, y = 'Deaths'))+
+  geom_point(alpha = 0.6) + 
+  geom_point(aes(colour=cluster))
+
+print(plot_list[[i]])
+}
+
+#grid.arrange(grobs=plot_list,ncol=2)
+```
+
+
+```{r K- Means Approach 2: Dropping Predictors}
+rf_drop_list <- c('Undernourished', 'Stimulants', 'fat_Meat', 'Aquatic.Products..Other',
+                      'fat_Sugar...Sweeteners','fat_Stimulants', 'Offals', 'Population',
+                      'Fruits...Excluding.Wine','Aquatic.Products..Other', 'Vegetables',
+                      'Starchy.Roots')
+
+combined_filtered <- combined[ , !names(combined) %in% rf_drop_list]
+
+combined_kmeans2 <- data.frame(kmeans_processing(combined_filtered))
+
+elbow_plot(combined_kmeans2)
+
+#optimal clusters: 2 or 3
+```
+
+```{r K- Means Approach 2: 2 Clusters}
+k <- kmeans_model(combined_kmeans2, 2)
+
+paste0('Within cluster variation of data: ',round(k$tot.withinss,2))
+combined_kmeans2$cluster=as.factor(k$cluster)
+```
+
+```{r K- Means Approach 1: 2 Clusters Visualize}
+library(ggthemes)
+library(gridExtra)
+#col <- c('Obesity')
+
+plot_list <- list() 
+
+for (i in colnames(combined_kmeans2)){
+plot_list[[i]] <- ggplot(combined_kmeans2,aes_string(x=i, y = 'Deaths'))+
+  geom_point(alpha = 0.6) + 
+  geom_point(aes(colour=cluster))
+
+print(plot_list[[i]])
+}
+
+#grid.arrange(grobs=plot_list,ncol=2)
+```

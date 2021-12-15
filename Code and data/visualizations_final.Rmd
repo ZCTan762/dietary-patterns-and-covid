@@ -1,0 +1,144 @@
+---
+title: "Visualizations"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Loading data}
+# % of food intake (kg) in countries around the world
+food_supply_o <- read.csv("Food_Supply_Quantity_kg_Data.csv")
+# % of energy intake (kcal) from different types of food in countries around the world. 
+kcal_intake_o <- read.csv("Food_Supply_kcal_Data.csv")
+# % of fat intake from different types of food in countries around the world
+fat_intake_o <- read.csv("Fat_Supply_Quantity_Data.csv")
+# % of protein intake from different types of food in countries around the world
+protein_intake_o <- read.csv("Protein_Supply_Quantity_Data.csv")
+
+# Select only required columns
+#country <- food_supply_o[, 1]
+food_supply <- food_supply_o[, c(1:31)]
+kcal_intake <- kcal_intake_o[, c(2:24)]
+fat_intake <- fat_intake_o[, c(2:24)]
+protein_intake <- protein_intake_o[, c(2:24)]
+```
+
+```{r Renaming columns }
+#defining the function to output new columns names 
+rename_columns <- function(prefix, dataframe){
+  new_names <- c()
+  for (i in colnames(dataframe)){
+    i = paste(prefix, i, sep = "")
+    new_names <- c(new_names, i)
+  }
+  return(new_names)
+}
+
+#renaming column names of the dataframes
+colnames(kcal_intake) <- rename_columns("kcal_",kcal_intake)
+colnames(fat_intake) <- rename_columns("fat_",fat_intake)
+colnames(protein_intake) <- rename_columns("protein_",protein_intake)
+```
+
+```{r Creating the final dataframe}
+# cbind function to combine dfs
+combined <- cbind(food_supply, kcal_intake, fat_intake, protein_intake)
+names(combined)
+ncol(combined)
+
+#creating index
+#rownames(combined) <- food_supply_o[, 1]
+head(combined)
+```
+
+```{r Transforming Undernourished Variable}
+combined$Undernourished=ifelse(combined$Undernourished=="<2.5",1.5, combined$Undernourished)
+#convert char to numeric
+combined$Undernourished = as.numeric(combined$Undernourished)
+# Treat Undernourished - Replace all '<2.5' with 1.5. And divide into 3 bins by value
+combined$Undernourished <- cut(combined$Undernourished, breaks = 3, labels = c("Low", "Mid", "High"))
+```
+
+
+```{r Processing null values}
+#dropping active, confirmed, recovered
+drop_list <- c('Active', 'Recovered', 'Confirmed')
+combined <- combined[ , !names(combined) %in% drop_list]
+
+#dropping null values from target variable 
+library(tidyr)
+combined <- combined %>% drop_na('Deaths')
+
+#creating a dataframe for count of nulls in each column in the combined dataframe 
+nulls <- colSums(is.na(combined))
+na_count <- data.frame( nulls)
+
+library(dplyr) 
+na_count %>% filter(nulls > 0)
+
+
+
+#data without labels for modelling
+#combined <- subset(combined,select = -c(Country))
+```
+
+
+```{r Target Variable Transformation}
+#adding Deaths as a categorical variable 
+library(Hmisc)
+combined$Deaths_cat <- cut2(combined$Deaths, g=3, labels = c("Low Risk", "Medium Risk", "High Risk"))
+combined$Deaths_cat <- as.character(combined$Deaths_cat)
+
+table(combined$Deaths_cat)
+
+combined$Deaths_cat[combined$Deaths_cat == "[0.00000,0.00438)"] <- "Low Risk"
+combined$Deaths_cat[combined$Deaths_cat == "[0.00438,0.05095)"] <- "Medium Risk"
+combined$Deaths_cat[combined$Deaths_cat == "[0.05095,0.18543]"] <- "High Risk"
+
+combined$Deaths_cat <- as.factor(combined$Deaths_cat)
+
+#data with labels
+data <- combined
+head(data)
+```
+```{r Downloading BBC Theme for Plots}
+#install.packages('devtools')
+devtools::install_github('bbc/bbplot', force = TRUE)
+
+#load necessary packages
+#if(!require(pacman))install.packages("pacman")
+
+# pacman::p_load('dplyr', 'tidyr', 'gapminder',
+#                'ggplot2',  'ggalt',
+#                'forcats', 'R.utils', 'png', 
+#                'grid', 'ggpubr', 'scales',
+#                'bbplot')
+```
+
+```{r}
+library(tidyverse)
+
+combined %>%
+  arrange(Deaths) %>%
+  select(Country,Deaths)
+
+```
+
+
+```{r Histogram: Deaths}}
+library(ggplot2)
+library(bbplot)
+ggplot(data = combined, aes(x=Deaths)) + 
+  geom_histogram( colour = "white", fill = "#1380A1") +
+  geom_hline(yintercept = 0, size = 1, colour="#333333") +
+  geom_vline(aes(xintercept=mean(Deaths)), color="red", linetype="dashed", size=0.5) +
+  bbc_style() +
+  labs(title = "How COVID Mortality Varies Around the world", subtitle ="Distribution of COVID-19 Death Rates, 02/06/2021") +
+  xlab("Death Rate as % of Population") +
+  theme(plot.title=element_text(size=15), plot.subtitle=element_text(size=10), axis.title.x = element_text(size=14)) +
+  geom_text(aes(x=mean(Deaths), label=paste0("Mean \n",round(mean(Deaths),2)), y=49))
+
+```
+
