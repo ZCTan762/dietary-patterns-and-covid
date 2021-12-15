@@ -42,6 +42,7 @@ colnames(protein_intake) <- rename_columns("protein_",protein_intake)
 combined <- cbind(food_supply, kcal_intake, fat_intake, protein_intake)
 attach(combined)
 
+
 ##### Preprocessing #####
 
 # Keep only Deaths as a target predictor
@@ -56,7 +57,7 @@ combined <- combined[ , !names(combined) %in% drop_list]
 # Drop rows with NAs in target var
 library(tidyr)
 
-combined <- combined %>% drop_na('Deaths')
+#combined <- combined %>% drop_na('Deaths')
 
 # Exclude Undernourished column for numerical analyses
 combined_numeric <- combined[,-25]
@@ -64,10 +65,10 @@ combined_numeric <- combined[,-25]
 # Treat Undernourished - Replace all '<2.5' with 1.5 and divide into 3 bins by value
 combined$Undernourished=ifelse(combined$Undernourished=="<2.5",1.5, combined$Undernourished)
 combined$Undernourished <- cut(combined$Undernourished, breaks = 3, labels = c("Low", "Mid", "High"))
-# Move NA  
-combined$Undernourished <- factor(ifelse(is.na(combined$Undernourished), 
-                                         "No Data", paste(combined$Undernourished)), 
-                                  levels = c(levels(combined$Undernourished), "No Data"))
+# Move NA
+#combined$Undernourished <- factor(ifelse(is.na(combined$Undernourished), 
+ #                                        "No Data", paste(combined$Undernourished)), 
+  #                                levels = c(levels(combined$Undernourished), "No Data"))
 
 # Create correlation matrix
 # cor_matrix <- cor(combined_numeric, method = c("pearson"))
@@ -247,9 +248,9 @@ combinedcat_filtered <- combinedcat[ , !names(combinedcat) %in% rf_drop_list_cat
 
 ### APPROACH 2: Choose significant predictors
 combinedcat_selected <- combinedcat[,c("Deaths_cat","Obesity", "Animal.Products", "Animal.fats",
-                                       "Vegetal.Products","Eggs","Oilcrops","Fish..Seafood",
+                                       "Vegetal.Products","Eggs","Fish..Seafood",
                                        "fat_Milk...Excluding.Butter","kcal_Sugar...Sweeteners",
-                                       "Alcoholic.Beverages","Treenuts","fat_Vegetal.Products",
+                                       "Alcoholic.Beverages","Treenuts",
                                        "fat_Cereals...Excluding.Beer")]
 
 ### Find importance again
@@ -299,18 +300,31 @@ for (i in 1:25)
 mean(accuracy_list)
 
 
+##### Making predictions #####
+predict(testforestcat,data.frame(Obesity=20.4,Animal.Products=20.0,Eggs=2.4,
+                                 Animal.fats = 0.67, Vegetal.Products=0.5, Fish..Seafood=9.0,
+                                 fat_Milk...Excluding.Butter = 15.0,kcal_Sugar...Sweeteners = 7,
+                                 Treenuts = 0.54, fat_Cereals...Excluding.Beer = 7.0,
+                                 Alcoholic.Beverages = 3.0
+                                 ))
+
+
 ##### Gradient Boosting #####
 
 library(gbm)
 
+sample = sample.split(combined_selected$Deaths, SplitRatio = .7)
+train = subset(combined_selected, sample == TRUE)
+test  = subset(combined_selected, sample == FALSE)
+
 # distribution="gaussian"  is used for regression problems
 # interaction.depth=4  is the number of nodes in each tree
-boosted=gbm(train$Deaths_cat~., data = train,
-            distribution="bernoulli",n.trees=10000, interaction.depth=4)
+boosted=gbm(train$Deaths~., data = train,
+            distribution="gaussian",n.trees=10000, interaction.depth=4)
 summary(boosted)
 
 predicted_score=predict(boosted, newdata=test, n.trees=10000)
-confusionMatrix(predicted_score, test$Deaths_cat)$overall['Accuracy']
+mean((predicted_score - test$Deaths)^2)
 
 # LDA setup
 # prior_prob<-data.frame(table(combined$Deaths_cat)/nrow(combined))
