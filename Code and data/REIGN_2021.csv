@@ -1,0 +1,171 @@
+Country,Age,leader_male,government,gov_democracy
+Afghanistan,72,1,Presidential Democracy,1
+Albania,57,1,Parliamentary Democracy,1
+Algeria,76,1,Presidential Democracy,1
+Angola,67,1,Dominant Party,0
+Antigua and Barbuda,54,1,Parliamentary Democracy,1
+Argentina,62,1,Presidential Democracy,1
+Armenia,46,1,Parliamentary Democracy,1
+Australia,53,1,Parliamentary Democracy,1
+Austria,35,1,Parliamentary Democracy,1
+Azerbaijan,60,1,Personal Dictatorship,0
+Bahamas,67,1,Parliamentary Democracy,1
+Bangladesh,74,0,Parliamentary Democracy,1
+Barbados,56,0,Parliamentary Democracy,1
+Belarus,67,1,Personal Dictatorship,0
+Belgium,46,1,Parliamentary Democracy,1
+Belize,61,1,Parliamentary Democracy,1
+Benin,63,1,Presidential Democracy,1
+Bolivia,58,1,Presidential Democracy,1
+Bosnia and Herzegovina,62,1,Foreign/Occupied,0
+Botswana,60,1,Dominant Party,0
+Brazil,66,1,Presidential Democracy,1
+Bulgaria,62,1,Parliamentary Democracy,1
+Burkina Faso,64,1,Presidential Democracy,1
+Cabo Verde,59,1,Parliamentary Democracy,1
+Cambodia,69,1,Dominant Party,0
+Cameroon,88,1,Personal Dictatorship,0
+Canada,50,1,Parliamentary Democracy,1
+Central African Republic,64,1,Presidential Democracy,1
+Chad,69,1,Personal Dictatorship,0
+Chile,72,1,Presidential Democracy,1
+China,68,1,Dominant Party,0
+Colombia,45,1,Presidential Democracy,1
+Congo,58,1,Personal Dictatorship,0
+Costa Rica,41,1,Presidential Democracy,1
+Cote d'Ivoire,,,,
+Croatia,51,1,Parliamentary Democracy,1
+Cuba,90,1,Party-Personal,0
+Cyprus,75,1,Foreign/Occupied,0
+Czechia,67,1,Parliamentary Democracy,1
+Denmark,44,0,Parliamentary Democracy,1
+Djibouti,74,1,Personal Dictatorship,0
+Dominica,49,1,Parliamentary Democracy,1
+Dominican Republic,54,1,Presidential Democracy,1
+Ecuador,68,1,Presidential Democracy,1
+Egypt,67,1,Military-Personal,0
+El Salvador,40,1,Presidential Democracy,1
+Estonia,44,0,Parliamentary Democracy,1
+Eswatini,,,,
+Ethiopia,45,1,Dominant Party,0
+Fiji,67,1,Military-Personal,0
+Finland,36,0,Parliamentary Democracy,1
+France,44,1,Presidential Democracy,1
+French Polynesia,,,,
+Gabon,62,1,Party-Personal,0
+Gambia,56,1,Presidential Democracy,1
+Georgia,46,1,Parliamentary Democracy,1
+Germany,67,0,Parliamentary Democracy,1
+Ghana,77,1,Presidential Democracy,1
+Greece,53,1,Parliamentary Democracy,1
+Grenada,75,1,Parliamentary Democracy,1
+Guatemala,65,1,Presidential Democracy,1
+Guinea,83,1,Presidential Democracy,1
+Guinea-Bissau,49,1,Presidential Democracy,1
+Guyana,41,1,Parliamentary Democracy,1
+Haiti,53,1,Presidential Democracy,1
+Honduras,53,1,Presidential Democracy,1
+Hungary,58,1,Dominant Party,0
+Iceland,45,0,Parliamentary Democracy,1
+India,71,1,Parliamentary Democracy,1
+Indonesia,60,1,Presidential Democracy,1
+Iran (Islamic Republic of),73,1,Dominant Party,0
+Iraq,54,1,Parliamentary Democracy,1
+Ireland,61,1,Parliamentary Democracy,1
+Israel,72,1,Parliamentary Democracy,1
+Italy,57,1,Parliamentary Democracy,1
+Jamaica,49,1,Parliamentary Democracy,1
+Japan,73,1,Parliamentary Democracy,1
+Jordan,59,1,Monarchy,0
+Kazakhstan,68,1,Personal Dictatorship,0
+Kenya,60,1,Presidential Democracy,1
+Kiribati,61,1,Presidential Democracy,1
+"Korea, North",38,1,Party-Personal,0
+"Korea, South",68,1,Presidential Democracy,1
+Kuwait,84,1,Monarchy,0
+Kyrgyzstan,53,1,Presidential Democracy,1
+Lao People's Democratic Republic,76,1,Dominant Party,0
+Latvia,57,1,Parliamentary Democracy,1
+Lebanon,51,1,Parliamentary Democracy,1
+Lesotho,60,1,Parliamentary Democracy,1
+Liberia,55,1,Presidential Democracy,1
+Lithuania,57,1,Parliamentary Democracy,1
+Luxembourg,48,1,Parliamentary Democracy,1
+Madagascar,47,1,Presidential Democracy,1
+Malawi,66,1,Presidential Democracy,1
+Malaysia,74,1,Parliamentary Democracy,1
+Maldives,57,1,Presidential Democracy,1
+Mali,71,1,Provisional - Military,0
+Malta,44,1,Parliamentary Democracy,1
+Mauritania,65,1,Personal Dictatorship,0
+Mauritius,60,1,Parliamentary Democracy,1
+Mexico,68,1,Presidential Democracy,1
+Mongolia,58,1,Presidential Democracy,1
+Montenegro,63,1,Parliamentary Democracy,1
+Morocco,58,1,Monarchy,0
+Mozambique,62,1,Dominant Party,0
+Myanmar,76,0,Party-Military,0
+Namibia,80,1,Dominant Party,0
+Nepal,69,1,Parliamentary Democracy,1
+Netherlands,54,1,Parliamentary Democracy,1
+New Caledonia,,,,
+New Zealand,41,0,Parliamentary Democracy,1
+Nicaragua,76,1,Party-Personal,0
+Niger,69,1,Presidential Democracy,1
+Nigeria,79,1,Presidential Democracy,1
+North Macedonia,47,1,Parliamentary Democracy,1
+Norway,60,0,Parliamentary Democracy,1
+Oman,67,1,Monarchy,0
+Pakistan,69,1,Parliamentary Democracy,1
+Panama,68,1,Presidential Democracy,1
+Paraguay,50,1,Presidential Democracy,1
+Peru,77,1,Presidential Democracy,1
+Philippines,76,1,Presidential Democracy,1
+Poland,49,1,Presidential Democracy,1
+Portugal,72,1,Presidential Democracy,1
+Republic of Moldova,53,1,Parliamentary Democracy,1
+Romania,62,1,Parliamentary Democracy,1
+Russian Federation,69,1,Personal Dictatorship,0
+Rwanda,64,1,Party-Military,0
+Saint Kitts and Nevis,57,1,Parliamentary Democracy,1
+Saint Lucia,60,1,Parliamentary Democracy,1
+Saint Vincent and the Grenadines,75,1,Parliamentary Democracy,1
+Samoa,76,1,Parliamentary Democracy,1
+Sao Tome and Principe,79,1,Parliamentary Democracy,1
+Saudi Arabia,86,1,Monarchy,0
+Senegal,60,1,Presidential Democracy,1
+Serbia,46,0,Parliamentary Democracy,1
+Sierra Leone,57,1,Presidential Democracy,1
+Slovakia,48,1,Parliamentary Democracy,1
+Slovenia,63,1,Parliamentary Democracy,1
+Solomon Islands,66,1,Parliamentary Democracy,1
+South Africa,69,1,Parliamentary Democracy,1
+Spain,49,1,Parliamentary Democracy,1
+Sri Lanka,72,1,Presidential Democracy,1
+Sudan,61,1,Provisional - Civilian,0
+Suriname,62,1,Parliamentary Democracy,1
+Sweden,64,1,Parliamentary Democracy,1
+Switzerland,62,1,Parliamentary Democracy,1
+Taiwan*,,,,
+Tajikistan,69,1,Personal Dictatorship,0
+Thailand,67,1,Military,0
+Timor-Leste,67,1,Presidential Democracy,1
+Togo,55,1,Personal Dictatorship,0
+Trinidad and Tobago,72,1,Parliamentary Democracy,1
+Tunisia,63,1,Presidential Democracy,1
+Turkey,67,1,Party-Personal,0
+Turkmenistan,64,1,Party-Personal,0
+Uganda,77,1,Personal Dictatorship,0
+Ukraine,43,1,Presidential Democracy,1
+United Arab Emirates,73,1,Monarchy,0
+United Kingdom,57,1,Parliamentary Democracy,1
+United Republic of Tanzania,62,1,Dominant Party,0
+United States of America,79,1,Presidential Democracy,1
+Uruguay,48,1,Presidential Democracy,1
+Uzbekistan,64,1,Party-Personal,0
+Vanuatu,60,1,Parliamentary Democracy,1
+Venezuela (Bolivarian Republic of),59,1,Personal Dictatorship,0
+Vietnam,77,1,Dominant Party,0
+Yemen,42,1,Warlordism,0
+Zambia,65,1,Presidential Democracy,1
+Zimbabwe,79,1,Dominant Party,0
