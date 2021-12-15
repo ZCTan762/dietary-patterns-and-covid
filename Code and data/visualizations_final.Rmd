@@ -78,8 +78,6 @@ na_count <- data.frame( nulls)
 library(dplyr) 
 na_count %>% filter(nulls > 0)
 
-
-
 #data without labels for modelling
 #combined <- subset(combined,select = -c(Country))
 ```
@@ -105,7 +103,7 @@ head(data)
 ```
 ```{r Downloading BBC Theme for Plots}
 #install.packages('devtools')
-devtools::install_github('bbc/bbplot', force = TRUE)
+#devtools::install_github('bbc/bbplot', force = TRUE)
 
 #load necessary packages
 #if(!require(pacman))install.packages("pacman")
@@ -138,7 +136,21 @@ ggplot(data = combined, aes(x=Deaths)) +
   labs(title = "How COVID Mortality Varies Around the world", subtitle ="Distribution of COVID-19 Death Rates, 02/06/2021") +
   xlab("Death Rate as % of Population") +
   theme(plot.title=element_text(size=15), plot.subtitle=element_text(size=10), axis.title.x = element_text(size=14)) +
-  geom_text(aes(x=mean(Deaths), label=paste0("Mean \n",round(mean(Deaths),2)), y=49))
+  geom_text(aes(x=mean(Deaths), label=paste0("Mean Death Rate \n",round(mean(Deaths),2)), y=49))
 
 ```
 
+```{r Histogram: Deaths}}
+library(ggplot2)
+library(bbplot)
+ggplot(data = combined, aes(x=Alcoholic.Beverages)) + 
+  geom_histogram( colour = "white", fill = "#1380A1") +
+  geom_hline(yintercept = 0, size = 1, colour="#333333") +
+  geom_vline(aes(xintercept=mean(Deaths)), color="red", linetype="dashed", size=0.5) +
+  bbc_style() +
+  labs(title = "How COVID Mortality Varies Around the world", subtitle ="Distribution of COVID-19 Death Rates, 02/06/2021") +
+  xlab("Death Rate as % of Population") +
+  theme(plot.title=element_text(size=15), plot.subtitle=element_text(size=10), axis.title.x = element_text(size=14)) +
+  geom_text(aes(x=mean(Deaths), label=paste0("Mean Death Rate \n",round(mean(Deaths),2)), y=49))
+
+```

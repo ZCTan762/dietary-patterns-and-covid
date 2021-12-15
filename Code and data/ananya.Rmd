@@ -19,7 +19,7 @@ protein_intake_o <- read.csv("Protein_Supply_Quantity_Data.csv")
 
 # Select only required columns
 #country <- food_supply_o[, 1]
-food_supply <- food_supply_o[, c(1:31)]
+food_supply <- food_supply_o[, c(2:31)]
 kcal_intake <- kcal_intake_o[, c(2:24)]
 fat_intake <- fat_intake_o[, c(2:24)]
 protein_intake <- protein_intake_o[, c(2:24)]
@@ -51,6 +51,7 @@ ncol(combined)
 #creating index
 rownames(combined) <- food_supply_o[, 1]
 head(combined)
+
 ```
 
 ```{r Transforming Undernourished Variable}
@@ -82,7 +83,7 @@ na_count %>% filter(nulls > 0)
 full_data <- combined
 
 #data without labels for modelling
-combined <- subset(combined,select = -c(Country))
+#combined <- subset(combined,select = -c(Country))
 ```
 
 ```{r Correlation}
@@ -92,6 +93,25 @@ combined_numeric <- subset(combined,select = -c(Undernourished))
 # Create correlation matrix
 cor_matrix <- cor(combined_numeric, method = c("pearson"))
 ```
+
+
+```{r Correlation Heatmap 2}
+# Create correlation matrix
+cor_matrix <- cor(combined_numeric, method = c("pearson"))
+
+library(reshape2)
+melted_cormat <- melt(cor_matrix)
+
+#plotting correlation heat map
+library(ggplot2)
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+    geom_tile(color = "black") +
+  scale_fill_gradientn(colors = hcl.colors(20, "RdYlGn")) +
+  coord_fixed() +  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 5), axis.text.y = element_text( size = 5))
+
+```
+
+
 
 ```{r Drop correlated variables}
 cor_drop_list <- c('Milk...Excluding.Butter', 'kcal_Alcoholic.Beverages', 
@@ -136,7 +156,7 @@ for (i in 1:ncol(combined_numeric)) {
 ```
 
 
-```{r Correlation Heatmap}
+```{r Correlation Heatmap 2}
 # Create correlation matrix
 cor_matrix <- cor(combined_numeric, method = c("pearson"))
 

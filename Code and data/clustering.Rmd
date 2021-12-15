@@ -20,7 +20,7 @@ protein_intake_o <- read.csv("Protein_Supply_Quantity_Data.csv")
 
 # Select only required columns
 #country <- food_supply_o[, 1]
-food_supply <- food_supply_o[, c(1:31)]
+food_supply <- food_supply_o[, c(1:31)] #not dropping countries here 
 kcal_intake <- kcal_intake_o[, c(2:24)]
 fat_intake <- fat_intake_o[, c(2:24)]
 protein_intake <- protein_intake_o[, c(2:24)]
@@ -65,7 +65,7 @@ combined$Undernourished <- cut(combined$Undernourished, breaks = 3, labels = c("
 
 ```{r Processing null values}
 #dropping active, confirmed, recovered
-drop_list <- c('Active', 'Recovered', 'Confirmed')
+drop_list <- c('Active', 'Recovered', 'Confirmed') 
 combined <- combined[ , !names(combined) %in% drop_list]
 
 #dropping null values from target variable 
@@ -81,6 +81,7 @@ na_count %>% filter(nulls > 0)
 
 #data with labels
 full_data <- combined
+rownames(full_data) <- c()
 
 #data without labels for modelling
 combined <- subset(combined,select = -c(Country))
@@ -161,29 +162,15 @@ plot(k_vals, wss_values,
 }
 ```
 
-```{r K-Means Function: Modelling}
-
-#function 
-#input dataframe, number of clusters 
-
-#output 1 - within cluster variation 
-
-kmeans_model <- function(dataframe, cluster_num)
-  {k <- kmeans(dataframe, centers = cluster_num, nstart = 25)
-#within cluster variation of data 
-  return(k)
-
-#paste0('Within cluster variation of data: ',round(k$tot.withinss,2))
-#dataframe$cluster=as.factor(k$cluster)
-} 
-
-```
 
 ```{r K- Means Approach 1: Selecting Significant Predictors}
 combined_selected <- combined[,c("Deaths","Obesity","Oilcrops","Alcoholic.Beverages",
                                  "Eggs","fat_Vegetal.Products","Animal.Products",
                                  "Vegetal.Products","Animal.fats","protein_Vegetable.Oils")]
 
+combined_selected_fin <- full_data[,c("Country","Deaths","Obesity","Oilcrops","Alcoholic.Beverages",
+                                 "Eggs","fat_Vegetal.Products","Animal.Products",
+                                 "Vegetal.Products","Animal.fats","protein_Vegetable.Oils")]
 combined_kmeans1 <- data.frame(kmeans_processing(combined_selected))
 
 elbow_plot(combined_kmeans1)
@@ -191,11 +178,19 @@ elbow_plot(combined_kmeans1)
 #optimal clusters: 2 or 3
 ```
 
-```{r K- Means Approach 1: 2 Clusters}
-k <- kmeans_model(combined_kmeans1, 2)
 
+```{r K- Means Approach 1: 2 Clusters}
+k <- kmeans(combined_kmeans1, centers = 2, nstart = 25)
 paste0('Within cluster variation of data: ',round(k$tot.withinss,2))
 combined_kmeans1$cluster=as.factor(k$cluster)
+kmeans12_centers <- data.frame(k$centers)
+kmeans12_centers
+
+write.csv(kmeans12_centers,"two_cluster.csv", row.names = TRUE)
+#comparing cluster centers 
+ggplot(data=kmeans12_centers, aes(x=rownames(kmeans12_centers), y=Deaths, fill=rownames(kmeans12_centers))) +
+    geom_bar(stat="identity")
+
 ```
 
 
@@ -219,10 +214,25 @@ print(plot_list[[i]])
 ```
 
 ```{r K- Means Approach 1: 3 Clusters}
-k <- kmeans_model(combined_kmeans1, 3)
+k2 <- kmeans(combined_kmeans1, centers = 3, nstart = 25)
+paste0('Within cluster variation of data: ',round(k2$tot.withinss,2))
+combined_kmeans1$cluster=as.factor(k2$cluster)
+kmeans13_centers <- data.frame(k2$centers)
 
-paste0('Within cluster variation of data: ',round(k$tot.withinss,2))
-combined_kmeans1$cluster=as.factor(k$cluster)
+write.csv(kmeans13_centers,"three_cluster.csv", row.names = TRUE)
+
+#comparing cluster centers 
+ggplot(data=kmeans13_centers, aes(x=rownames(kmeans13_centers), y=Obesity, fill=rownames(kmeans13_centers))) +
+    geom_bar(stat="identity")
+
+
+ggplot(data=kmeans13_centers, aes(x=rownames(kmeans13_centers), y=Deaths, fill=rownames(kmeans13_centers))) +
+    geom_bar(stat="identity")
+
+
+ggplot(data=kmeans13_centers, aes(x=rownames(kmeans13_centers), y=Alcoholic.Beverages, fill=rownames(kmeans13_centers))) +
+    geom_bar(stat="identity")
+
 ```
 
 ```{r K- Means Approach 1: 3 Clusters Visualize}
@@ -260,10 +270,12 @@ elbow_plot(combined_kmeans2)
 ```
 
 ```{r K- Means Approach 2: 2 Clusters}
-k <- kmeans_model(combined_kmeans2, 2)
 
-paste0('Within cluster variation of data: ',round(k$tot.withinss,2))
-combined_kmeans2$cluster=as.factor(k$cluster)
+k3 <- kmeans(combined_kmeans2, centers = 2, nstart = 25)
+paste0('Within cluster variation of data: ',round(k3$tot.withinss,2))
+combined_kmeans2$cluster=as.factor(k3$cluster)
+kmeans22_centers <- k3$centers
+
 ```
 
 ```{r K- Means Approach 1: 2 Clusters Visualize}
