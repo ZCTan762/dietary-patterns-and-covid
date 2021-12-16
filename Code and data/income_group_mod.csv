@@ -80,7 +80,7 @@ Jordan,Middle income
 Kazakhstan,Middle income
 Kenya,Middle income
 Kiribati,Middle income
-"Korea, North",
+"Korea, North",Low income
 "Korea, South",High income
 Kuwait,High income
 Kyrgyzstan,Middle income
@@ -131,7 +131,7 @@ Saint Kitts and Nevis,High income
 Saint Lucia,Middle income
 Saint Vincent and the Grenadines,Middle income
 Samoa,Middle income
-Sao Tome and Principe,
+Sao Tome and Principe,Middle income
 Saudi Arabia,High income
 Senegal,Middle income
 Serbia,Middle income
@@ -146,7 +146,7 @@ Sudan,Low income
 Suriname,Middle income
 Sweden,High income
 Switzerland,High income
-Taiwan*,
+Taiwan*,High income
 Tajikistan,Middle income
 Thailand,Middle income
 Timor-Leste,Middle income
@@ -164,7 +164,7 @@ United States of America,High income
 Uruguay,High income
 Uzbekistan,Middle income
 Vanuatu,Middle income
-Venezuela (Bolivarian Republic of),
+Venezuela (Bolivarian Republic of),Low income
 Vietnam,Middle income
 Yemen,Low income
 Zambia,Middle income
