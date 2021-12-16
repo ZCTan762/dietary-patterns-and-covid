@@ -178,6 +178,55 @@ elbow_plot(combined_kmeans1)
 #optimal clusters: 2 or 3
 ```
 
+```{r Elbow Method Plot}
+set.seed(123)
+# function to compute total within-cluster sum of square 
+within_val <- function(k) {
+  kmeans(combined_kmeans1, k, nstart = 10)$tot.withinss
+}
+
+# Compute and plot wss for k = 1 to k = 15
+k_vals <- seq(1, 9)
+
+# extract wss for 2-15 clusters
+wss_values <- c()
+
+for (i in k_vals){
+  new_val <- within_val(i)
+  wss_values <- c(wss_values, new_val)
+}
+
+wss_df <- data.frame(k_vals, wss_values)
+
+op <- subset(wss_df, k_vals == 2)
+
+#ggplot for elbow method
+library(bbplot)
+ ggplot(data = wss_df, aes(x = k_vals, y = wss_values))+ 
+  geom_line()+
+  geom_point()+
+  xlab("Number of clusters K") +
+  ylab("Total within-clusters sum of squares") +
+  scale_x_continuous(limits=c(0,12),
+                   breaks = seq(0, 8, by = 4),
+                   labels = c("0","4", "8 clusters"))+
+  labs(title = "Finding Optimal Number of Clusters", subtitle ="Elbow Method")+ 
+  theme( plot.title=element_text(size=15), plot.subtitle=element_text(size=10), axis.title.x = element_text(size=12), axis.title.y = element_text(size=12))+ 
+  geom_point(data = op, colour="#1380A1")+ 
+  geom_text(data=op, label= paste0("Optimal K =", 2), vjust=1.5, hjust = 1)
+  
+  
+#regular plot 
+plot(k_vals, wss_values,
+       type="b", pch = 19, frame = FALSE, 
+       xlab="Number of clusters K",
+       ylab="Total within-clusters sum of squares")
+
+
+```
+
+
+
 
 ```{r K- Means Approach 1: 2 Clusters}
 k <- kmeans(combined_kmeans1, centers = 2, nstart = 25)
