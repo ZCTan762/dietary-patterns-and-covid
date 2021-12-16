@@ -33,7 +33,7 @@ China,68,1,Dominant Party,0
 Colombia,45,1,Presidential Democracy,1
 Congo,58,1,Personal Dictatorship,0
 Costa Rica,41,1,Presidential Democracy,1
-Cote d'Ivoire,,,,
+Cote d'Ivoire,79,1,Presidential Democracy,1
 Croatia,51,1,Parliamentary Democracy,1
 Cuba,90,1,Party-Personal,0
 Cyprus,75,1,Foreign/Occupied,0
@@ -46,12 +46,12 @@ Ecuador,68,1,Presidential Democracy,1
 Egypt,67,1,Military-Personal,0
 El Salvador,40,1,Presidential Democracy,1
 Estonia,44,0,Parliamentary Democracy,1
-Eswatini,,,,
+Eswatini,53,1,Monarchy,0
 Ethiopia,45,1,Dominant Party,0
 Fiji,67,1,Military-Personal,0
 Finland,36,0,Parliamentary Democracy,1
 France,44,1,Presidential Democracy,1
-French Polynesia,,,,
+French Polynesia,69,1,Parliamentary Democracy,1
 Gabon,62,1,Party-Personal,0
 Gambia,56,1,Presidential Democracy,1
 Georgia,46,1,Parliamentary Democracy,1
@@ -108,7 +108,7 @@ Myanmar,76,0,Party-Military,0
 Namibia,80,1,Dominant Party,0
 Nepal,69,1,Parliamentary Democracy,1
 Netherlands,54,1,Parliamentary Democracy,1
-New Caledonia,,,,
+New Caledonia,54,1,Parliamentary Democracy,
 New Zealand,41,0,Parliamentary Democracy,1
 Nicaragua,76,1,Party-Personal,0
 Niger,69,1,Presidential Democracy,1
@@ -146,7 +146,7 @@ Sudan,61,1,Provisional - Civilian,0
 Suriname,62,1,Parliamentary Democracy,1
 Sweden,64,1,Parliamentary Democracy,1
 Switzerland,62,1,Parliamentary Democracy,1
-Taiwan*,,,,
+Taiwan*,65,0,Presidential Democracy,1
 Tajikistan,69,1,Personal Dictatorship,0
 Thailand,67,1,Military,0
 Timor-Leste,67,1,Presidential Democracy,1

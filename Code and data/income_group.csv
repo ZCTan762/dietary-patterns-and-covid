@@ -22,7 +22,7 @@ Burkina Faso,Low income
 Bangladesh,Lower middle income
 Bulgaria,Upper middle income
 Bahrain,High income
-"Bahamas, The",High income
+Bahamas,High income
 Bosnia and Herzegovina,Upper middle income
 Belarus,Upper middle income
 Belize,Lower middle income
@@ -40,10 +40,9 @@ Switzerland,High income
 Channel Islands,High income
 Chile,High income
 China,Upper middle income
-Côte d'Ivoire,Lower middle income
+Cote d'Ivoire,Lower middle income
 Cameroon,Lower middle income
-"Congo, Dem. Rep.",Low income
-"Congo, Rep.",Lower middle income
+Congo,Low income
 Colombia,Upper middle income
 Comoros,Lower middle income
 Cabo Verde,Lower middle income
@@ -53,7 +52,7 @@ Cuba,Upper middle income
 Curaçao,High income
 Cayman Islands,High income
 Cyprus,High income
-Czech Republic,High income
+Czechia,High income
 Germany,High income
 Djibouti,Lower middle income
 Dominica,Upper middle income
@@ -66,7 +65,7 @@ East Asia & Pacific,
 Europe & Central Asia (excluding high income),
 Europe & Central Asia,
 Ecuador,Upper middle income
-"Egypt, Arab Rep.",Lower middle income
+Egypt,Lower middle income
 Euro area,
 Eritrea,Low income
 Spain,High income
@@ -85,7 +84,7 @@ Georgia,Upper middle income
 Ghana,Lower middle income
 Gibraltar,High income
 Guinea,Low income
-"Gambia, The",Low income
+Gambia,Low income
 Guinea-Bissau,Low income
 Equatorial Guinea,Upper middle income
 Greece,High income
@@ -110,7 +109,7 @@ IDA only,
 Isle of Man,High income
 India,Lower middle income
 Ireland,High income
-"Iran, Islamic Rep.",Lower middle income
+Iran (Islamic Republic of),Lower middle income
 Iraq,Upper middle income
 Iceland,High income
 Israel,High income
@@ -120,18 +119,18 @@ Jordan,Upper middle income
 Japan,High income
 Kazakhstan,Upper middle income
 Kenya,Lower middle income
-Kyrgyz Republic,Lower middle income
+Kyrgyzstan,Lower middle income
 Cambodia,Lower middle income
 Kiribati,Lower middle income
-St. Kitts and Nevis,High income
-"Korea, Rep.",High income
+Saint Kitts and Nevis,High income
+"Korea, South",High income
 Kuwait,High income
 Latin America & Caribbean (excluding high income),
-Lao PDR,Lower middle income
+Lao People's Democratic Republic,Lower middle income
 Lebanon,Upper middle income
 Liberia,Low income
 Libya,Upper middle income
-St. Lucia,Upper middle income
+Saint Lucia,Upper middle income
 Latin America & Caribbean,
 Least developed countries: UN classification,
 Low income,
@@ -148,7 +147,7 @@ Latvia,High income
 St. Martin (French part),High income
 Morocco,Lower middle income
 Monaco,High income
-Moldova,Upper middle income
+Republic of Moldova,Upper middle income
 Madagascar,Low income
 Maldives,Upper middle income
 Middle East & North Africa,
@@ -219,7 +218,7 @@ Sub-Saharan Africa,
 Small states,
 São Tomé and Principe,Lower middle income
 Suriname,Upper middle income
-Slovak Republic,High income
+Slovakia,High income
 Slovenia,High income
 Sweden,High income
 Eswatini,Lower middle income
@@ -244,14 +243,14 @@ Trinidad and Tobago,High income
 Tunisia,Lower middle income
 Turkey,Upper middle income
 Tuvalu,Upper middle income
-Tanzania,Lower middle income
+United Republic of Tanzania,Lower middle income
 Uganda,Low income
 Ukraine,Lower middle income
 Upper middle income,
 Uruguay,High income
-United States,High income
+United States of America,High income
 Uzbekistan,Lower middle income
-St. Vincent and the Grenadines,Upper middle income
+Saint Vincent and the Grenadines,Upper middle income
 "Venezuela, RB",
 British Virgin Islands,High income
 Virgin Islands (U.S.),High income
@@ -260,7 +259,7 @@ Vanuatu,Lower middle income
 World,
 Samoa,Lower middle income
 Kosovo,Upper middle income
-"Yemen, Rep.",Low income
+Yemen,Low income
 South Africa,Upper middle income
 Zambia,Lower middle income
 Zimbabwe,Lower middle income
