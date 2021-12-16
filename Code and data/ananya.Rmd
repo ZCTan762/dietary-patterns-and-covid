@@ -265,6 +265,9 @@ importance_plot(importance, "Deaths (Categorical)")
 
 importance <- read.csv("/Users/ananyanair/Downloads/importance_reg_recovered.csv")
 importance_plot(importance, "Recovered (Regression)")
+
+importance <- read.csv("/Users/ananyanair/Downloads/importance_cat_confirmed.csv")
+importance_plot(importance, "Confirmed (Categorical)")
 ```
 
 ```{r RF Regression Approach 1: Dropping Insignificant Predictors}

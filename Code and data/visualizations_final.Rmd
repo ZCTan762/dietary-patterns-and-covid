@@ -110,7 +110,7 @@ head(data)
 
 # pacman::p_load('dplyr', 'tidyr', 'gapminder',
 #                'ggplot2',  'ggalt',
-#                'forcats', 'R.utils', 'png', 
+#                'forcats', 'R.utils', 'png',
 #                'grid', 'ggpubr', 'scales',
 #                'bbplot')
 ```
@@ -183,6 +183,6 @@ ggplot(data = combined, aes(x=Active)) +
   labs(title = "How COVID Active Cases Vary Around the world", subtitle ="Distribution of COVID-19 Active Cases Rates, 02/06/2021") +
   xlab("Active Cases Rate as % of Population") +
   theme(plot.title=element_text(size=15), plot.subtitle=element_text(size=10), axis.title.x = element_text(size=14)) +
-  geom_text(aes(x=mean(Deaths)+1, label=paste0("Mean Active Cases Rate \n",round(mean(Active),2)), y=49))
+  geom_text(aes(x=mean(Active)+1, label=paste0("Mean Active Cases Rate \n",round(mean(Active),2)), y=49))
 
 ```
