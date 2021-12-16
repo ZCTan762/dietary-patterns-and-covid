@@ -211,6 +211,62 @@ importance_df1 <- data.frame(sort(rowMeans(cbind(y[[1]], y[[2]], y[[3]], y[[4]],
 
 colnames(importance_df1) <- 'avg_importance'
 ```
+```{r}
+
+```
+
+
+```{r}
+importance_plot <- function(importance, var){
+nums <- seq(1,nrow(importance))
+importance$nums <- nums
+colnames(importance) <- c('Variable', 'Mean_Decrease_Accuracy', 'Index')
+#colnames(importance) <- c('Variable', 'Mean_Decrease_Accuracy')
+#importance_f <- subset(importance, select = c(-Variable))
+
+#plotting only top 15
+importance_f <- importance[1:15,]
+head(importance_f)
+#mean decrease
+
+library(bbplot)
+library(ggplot2)
+fin_plot <- ggplot(data = importance_f, aes(x = Index, y = Mean_Decrease_Accuracy, label = Variable))+ 
+  geom_line()+
+  geom_point()+
+  xlab("Top 15 Predictors") +
+  ylab("Mean Decrease in Accuracy") +
+  labs(title = "Finding the Most Significant Predictors", subtitle = paste0("Random Forest: Importance Score, Target Variable: ",var))+ 
+  theme( plot.title=element_text(size=15), plot.subtitle=element_text(size=10), axis.title.x = element_text(size=12), axis.title.y = element_text(size=12))+
+  geom_vline(aes(xintercept=10), color="red", linetype="dashed", size=0.5)+
+  geom_text(nudge_y = 0.3, size = 2)
+
+print(fin_plot)
+
+}
+
+#importance <- read.csv("/Users/ananyanair/Downloads/importance_cat.csv")
+# importance_plot(importance, "Confirmed (Categorical)")  
+# 
+# 
+# importance <- read.csv("/Users/ananyanair/Downloads/importance_reg_confirmed.csv")
+# importance_plot(importance, "Confirmed (Regression)") 
+
+
+
+# importance <- read.csv("/Users/ananyanair/Downloads/importance_cat_recovered.csv")
+# importance_plot(importance, "Recovered (Categorical)") 
+
+
+# importance <- read.csv("/Users/ananyanair/Downloads/importance_reg_deaths.csv")
+# importance_plot(importance, "Deaths (Regression)") 
+
+# importance <- read.csv("/Users/ananyanair/Downloads/importance_cat_deaths.csv")
+# importance_plot(importance, "Deaths (Categorical)")
+
+importance <- read.csv("/Users/ananyanair/Downloads/importance_reg_recovered.csv")
+importance_plot(importance, "Recovered (Regression)")
+```
 
 ```{r RF Regression Approach 1: Dropping Insignificant Predictors}
 ### Drop insignificant predictors
