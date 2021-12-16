@@ -109,6 +109,7 @@ combined$Deaths_cat <- as.factor(combined$Deaths_cat)
 ```
 
 
+
 ```{r Function: K-Means Data Preprocessing}
 
 #defining a function that creates dummies and scales data
@@ -214,14 +215,6 @@ library(bbplot)
   theme( plot.title=element_text(size=15), plot.subtitle=element_text(size=10), axis.title.x = element_text(size=12), axis.title.y = element_text(size=12))+ 
   geom_point(data = op, colour="#1380A1")+ 
   geom_text(data=op, label= paste0("Optimal K =", 2), vjust=1.5, hjust = 1)
-  
-  
-#regular plot 
-plot(k_vals, wss_values,
-       type="b", pch = 19, frame = FALSE, 
-       xlab="Number of clusters K",
-       ylab="Total within-clusters sum of squares")
-
 
 ```
 
@@ -237,49 +230,60 @@ kmeans12_centers
 
 #write.csv(kmeans12_centers,"two_cluster.csv", row.names = TRUE)
 #comparing cluster centers 
-ggplot(data=kmeans12_centers, aes(x=rownames(kmeans12_centers), y=Deaths, fill=rownames(kmeans12_centers))) +
-    geom_bar(stat="identity")
+
+write.csv(combined_kmeans1,"/Users/ananyanair/Desktop/kmeans_result.csv", row.names = TRUE)
 
 ```
+
+
+```{r Income Group Analysis}
+#importing updated combined_kmeans1, for each country its corresponding income group was found (using VLOOKUP and country: income group dataset)
+cluster_income <- read.csv('kmeans_result_income.csv')
+table(cluster_income$Income_Group)
+table(cluster_income$cluster)
+
+library(dplyr)
+cluster_income %>%
+  count(Income_Group,cluster)
+
+```
+
 
 ```{r}
+dataset_income <- read.csv('Clustering_Analysis/dataset_income.csv')
+head(dataset_income)
 
-#kmeans12_centers <- subset(kmeans12_centers,select = -c(cluster))
-
-centers <- as.data.frame(t(kmeans12_centers))
-
-c1 <- subset(kmeans12_centers, rownames(kmeans12_centers) == 1)
-c2 <-  subset(kmeans12_centers, rownames(kmeans12_centers) == 2)
-
-pivot_c2 <- c2 %>% 
-  pivot_longer(cols = colnames(c2))
-
-pivot_c1 <- c1 %>% 
-  pivot_longer(cols = colnames(c1))
-
-
-library(bbplot)
- ggplot()+ 
-  geom_bar(data = pivot_c2, aes(x = name, y = value, position = "dodge2"),stat = "identity", fill = "red", alpha = 0.7, col = "red")+
-  theme(axis.text = element_text(size = 8, angle = 90, vjust = 1, hjust=1))+
-   geom_bar(data = pivot_c1, aes(x = name, y = value, position = "dodge2"),stat = "identity", fill = "steelblue", alpha = 0.7,  col = "steelblue") 
-   
-library(bbplot)
-ggplot()+ 
-  geom_bar(data = centers, aes(x = name, y = value, fill = rownames(centers))
-           
-           
-           ,stat = "identity", fill = "red", alpha = 0.7, col = "red")+
-  theme(axis.text = element_text(size = 8, angle = 90, vjust = 1, hjust=1))+
-   geom_bar(data = pivot_c1, aes(x = name, y = value),stat = "identity", fill = "steelblue", alpha = 0.7,  col = "steelblue")+   
-   scale_fill_manual(values=c("red", "steelblue"), 
-                       name="Cluster Labels:",
-                       breaks=c("1", "2"),
-                       labels=c("1", "2"))
- 
-
+dataset_income %>%
+  select(Income_Group, Alcoholic.Beverages, Obesity, Sugar...Sweeteners,, Vegetables) %>%
+  group_by(Income_Group) %>%
+  summarise(mean_alcohol = round(mean(Alcoholic.Beverages),2), mean_obesity = round(mean(Obesity),2), mean_Sugar = round(mean(Sugar...Sweeteners),2), mean_Vegetables = round(mean(Vegetables),2))
 
 ```
+
+```{r #Summary of Cluster Centers}
+head(kmeans12_centers)
+
+#cluster order: 2,1 
+kmeans12_centers = subset(kmeans12_centers, select = -c(cluster))
+pivot_centers <- kmeans12_centers %>% 
+  pivot_longer(cols = colnames(kmeans12_centers))
+head(pivot_centers)
+
+clusters1 <- rep(1,10)
+clusters2 <- rep(2,10)
+all <- c(clusters2, clusters1)
+pivot_centers$labels <-all
+head(pivot_centers)
+
+
+ggplot(aes(x = factor(name), y = value, fill=factor(labels)), data = pivot_centers) +
+    stat_summary(fun=mean, geom="bar", position = "dodge2") + 
+  theme(axis.text = element_text(size = 8, angle = 90, vjust = 1, hjust=1))+
+  scale_fill_discrete(name = "Cluster Label")+
+  + xlab("Dose (mg)") 
+
+```
+
 
 
 
@@ -291,7 +295,7 @@ library(gridExtra)
 colnames(combined_kmeans1) <- c("Deaths", "Obesity", "Oilcrops","Alcoholic.Beverages", "Eggs","fat_Vegetable.Products","Animal.Products","Vegetable.Products","Animal.fats","protein_Vegetable.Oils","cluster")     
 
 
-plot_cols <- c('Obesity', 'Alcoholic.Beverages', "Eggs", "Animal.fats")
+plot_cols <- c('Obesity', 'Alcoholic.Beverages', "Vegetable.Products", "Animal.Products")
 
 
 plot_list <-c()
@@ -311,36 +315,21 @@ grid.arrange(plot1, plot2, ncol=2)
 grid.arrange(grobs=plot_list,ncol=2)
 ```
 
-```{r K- Means Approach 1: 3 Clusters}
-k2 <- kmeans(combined_kmeans1, centers = 3, nstart = 25)
-paste0('Within cluster variation of data: ',round(k2$tot.withinss,2))
-combined_kmeans1$cluster=as.factor(k2$cluster)
-kmeans13_centers <- data.frame(k2$centers)
-
-write.csv(kmeans13_centers,"three_cluster.csv", row.names = TRUE)
-
-#comparing cluster centers 
-ggplot(data=kmeans13_centers, aes(x=rownames(kmeans13_centers), y=Obesity, fill=rownames(kmeans13_centers))) +
-    geom_bar(stat="identity")
 
 
-ggplot(data=kmeans13_centers, aes(x=rownames(kmeans13_centers), y=Deaths, fill=rownames(kmeans13_centers))) +
-    geom_bar(stat="identity")
-
-
-ggplot(data=kmeans13_centers, aes(x=rownames(kmeans13_centers), y=Alcoholic.Beverages, fill=rownames(kmeans13_centers))) +
-    geom_bar(stat="identity")
-
-```
-
-```{r K- Means Approach 1: 3 Clusters Visualize}
+```{r Appendix: K- Means Approach 1: 2 Clusters Visualize}
 library(ggthemes)
 library(gridExtra)
 #col <- c('Obesity')
 
-plot_list <- list() 
+colnames(combined_kmeans1) <- c("Deaths", "Obesity", "Oilcrops","Alcoholic.Beverages", "Eggs","fat_Vegetable.Products","Animal.Products","Vegetable.Products","Animal.fats","protein_Vegetable.Oils","cluster")     
 
-for (i in colnames(combined_kmeans1)){
+
+plot_cols <- c('Obesity', 'Alcoholic.Beverages', "Eggs", "Animal.fats")
+plot_cols2 <-c('Oilcrops','Eggs', "fat_Vegetable.Products", "Animal.fats", "protein_Vegetable.Oils" )
+
+plot_list <-c()
+for (i in plot_cols2){
 plot_list[[i]] <- ggplot(combined_kmeans1,aes_string(x=i, y = 'Deaths'))+
   geom_point(alpha = 0.6) + 
   geom_point(aes(colour=cluster))
@@ -348,48 +337,10 @@ plot_list[[i]] <- ggplot(combined_kmeans1,aes_string(x=i, y = 'Deaths'))+
 print(plot_list[[i]])
 }
 
-#grid.arrange(grobs=plot_list,ncol=2)
-```
+require(gridExtra)
+plot1 <- qplot(1)
+plot2 <- qplot(1)
+grid.arrange(plot1, plot2, ncol=2)
 
-
-```{r K- Means Approach 2: Dropping Predictors}
-rf_drop_list <- c('Undernourished', 'Stimulants', 'fat_Meat', 'Aquatic.Products..Other',
-                      'fat_Sugar...Sweeteners','fat_Stimulants', 'Offals', 'Population',
-                      'Fruits...Excluding.Wine','Aquatic.Products..Other', 'Vegetables',
-                      'Starchy.Roots')
-
-combined_filtered <- combined[ , !names(combined) %in% rf_drop_list]
-
-combined_kmeans2 <- data.frame(kmeans_processing(combined_filtered))
-
-elbow_plot(combined_kmeans2)
-
-#optimal clusters: 2 or 3
-```
-
-```{r K- Means Approach 2: 2 Clusters}
-
-k3 <- kmeans(combined_kmeans2, centers = 2, nstart = 25)
-paste0('Within cluster variation of data: ',round(k3$tot.withinss,2))
-combined_kmeans2$cluster=as.factor(k3$cluster)
-kmeans22_centers <- k3$centers
-
-```
-
-```{r K- Means Approach 1: 2 Clusters Visualize}
-library(ggthemes)
-library(gridExtra)
-#col <- c('Obesity')
-
-plot_list <- list() 
-
-for (i in colnames(combined_kmeans2)){
-plot_list[[i]] <- ggplot(combined_kmeans2,aes_string(x=i, y = 'Deaths'))+
-  geom_point(alpha = 0.6) + 
-  geom_point(aes(colour=cluster))
-
-print(plot_list[[i]])
-}
-
-#grid.arrange(grobs=plot_list,ncol=2)
+grid.arrange(grobs=plot_list,ncol=2)
 ```

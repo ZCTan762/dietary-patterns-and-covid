@@ -64,12 +64,12 @@ combined$Undernourished <- cut(combined$Undernourished, breaks = 3, labels = c("
 
 ```{r Processing null values}
 #dropping active, confirmed, recovered
-drop_list <- c('Active', 'Recovered', 'Confirmed')
-combined <- combined[ , !names(combined) %in% drop_list]
+#drop_list <- c('Active', 'Recovered', 'Confirmed')
+#combined <- combined[ , !names(combined) %in% drop_list]
 
 #dropping null values from target variable 
 library(tidyr)
-combined <- combined %>% drop_na('Deaths')
+combined <- combined %>% drop_na('Deaths', 'Active', 'Confirmed', 'Recovered')
 
 #creating a dataframe for count of nulls in each column in the combined dataframe 
 nulls <- colSums(is.na(combined))
@@ -140,17 +140,49 @@ ggplot(data = combined, aes(x=Deaths)) +
 
 ```
 
-```{r Histogram: Deaths}}
+```{r Histogram: Recovered}}
 library(ggplot2)
 library(bbplot)
-ggplot(data = combined, aes(x=Alcoholic.Beverages)) + 
+ggplot(data = combined, aes(x=Recovered)) + 
   geom_histogram( colour = "white", fill = "#1380A1") +
   geom_hline(yintercept = 0, size = 1, colour="#333333") +
-  geom_vline(aes(xintercept=mean(Deaths)), color="red", linetype="dashed", size=0.5) +
+  geom_vline(aes(xintercept=mean(Recovered)), color="red", linetype="dashed", size=0.5) +
   bbc_style() +
-  labs(title = "How COVID Mortality Varies Around the world", subtitle ="Distribution of COVID-19 Death Rates, 02/06/2021") +
-  xlab("Death Rate as % of Population") +
+  labs(title = "How COVID-19 Recovery Varies Around the world", subtitle ="Distribution of COVID-19 Recovery Rates, 02/06/2021") +
+  xlab("Recovery Rate as % of Population") +
   theme(plot.title=element_text(size=15), plot.subtitle=element_text(size=10), axis.title.x = element_text(size=14)) +
-  geom_text(aes(x=mean(Deaths), label=paste0("Mean Death Rate \n",round(mean(Deaths),2)), y=49))
+  geom_text(aes(x=mean(Deaths)+1, label=paste0("Mean Recovery Rate \n",round(mean(Deaths),2)), y=40))
+
+```
+
+
+```{r Histogram: Confirmed}}
+library(ggplot2)
+library(bbplot)
+ggplot(data = combined, aes(x=Confirmed)) + 
+  geom_histogram( colour = "white", fill = "#1380A1") +
+  geom_hline(yintercept = 0, size = 1, colour="#333333") +
+  geom_vline(aes(xintercept=mean(Confirmed)), color="red", linetype="dashed", size=0.5) +
+  bbc_style() +
+  labs(title = "How COVID-19 Confirmed Cases Vary Around the world", subtitle ="Distribution of COVID-19 Confirmed Cases Rates, 02/06/2021") +
+  xlab("Confirmed Rate as % of Population") +
+  theme(plot.title=element_text(size=15), plot.subtitle=element_text(size=10), axis.title.x = element_text(size=14)) +
+  geom_text(aes(x=mean(Confirmed), label=paste0("Mean Confirmed Rate \n",round(mean(Confirmed),2)), y=49))
+
+```
+
+
+```{r Histogram: Active}}
+library(ggplot2)
+library(bbplot)
+ggplot(data = combined, aes(x=Active)) + 
+  geom_histogram( colour = "white", fill = "#1380A1") +
+  geom_hline(yintercept = 0, size = 1, colour="#333333") +
+  geom_vline(aes(xintercept=mean(Active)), color="red", linetype="dashed", size=0.5) +
+  bbc_style() +
+  labs(title = "How COVID Active Cases Vary Around the world", subtitle ="Distribution of COVID-19 Active Cases Rates, 02/06/2021") +
+  xlab("Active Cases Rate as % of Population") +
+  theme(plot.title=element_text(size=15), plot.subtitle=element_text(size=10), axis.title.x = element_text(size=14)) +
+  geom_text(aes(x=mean(Deaths)+1, label=paste0("Mean Active Cases Rate \n",round(mean(Active),2)), y=49))
 
 ```
