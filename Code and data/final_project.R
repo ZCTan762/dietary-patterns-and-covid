@@ -65,12 +65,11 @@ combined <- combined[ , !names(combined) %in% drop_list]
 # Drop rows with NAs in target var
 library(tidyr)
 
-
 #combined <- combined %>% drop_na('Deaths')
 combined <- combined %>% drop_na('Recovered')
 
 # Exclude Undernourished column for numerical analyses
-combined_numeric <- combined[,-25]
+combined_numeric <- combined[,c(-25,-97)]
 
 # Move NA
 #
@@ -104,17 +103,17 @@ combined <- combined[ , !names(combined) %in% cor_drop_list]
 combined_numeric <- combined_numeric[ , !names(combined_numeric) %in% cor_drop_list]
 
 # Check correlation once more 
-# cor_matrix <- cor(combined_numeric, method = c("pearson"))
+cor_matrix <- cor(combined_numeric, method = c("pearson"))
 # write.csv(round(cor_matrix, 3), file = "cormatrix2.csv")
 
 # Plot correlation heatmap
-# library(ggplot2)
-# library(reshape2)
-# melted_cormat <- melt(cor_matrix)
-# ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
-#   geom_tile(color = "black") +
-#   scale_fill_gradientn(colors = hcl.colors(20, "RdYlGn")) +
-#   coord_fixed()
+library(ggplot2)
+library(reshape2)
+melted_cormat <- melt(cor_matrix)
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+   geom_tile(color = "black") +
+   scale_fill_gradientn(colors = hcl.colors(20, "RdYlGn")) +
+   coord_fixed()
 
 # Treat Undernourished - Replace all '<2.5' with 1.5 and divide into 3 bins by value
 combined$Undernourished=ifelse(combined$Undernourished=="<2.5",1.5, combined$Undernourished)
