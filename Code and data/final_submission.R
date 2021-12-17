@@ -67,6 +67,7 @@ library(tidyr)
 
 combined <- combined %>% drop_na('Deaths')
 #combined <- combined %>% drop_na('Recovered')
+#combined <- combined %>% drop_na('Confirmed')
 
 # Exclude Undernourished column for numerical analyses
 combined_numeric <- combined[,c(-25,-97)]
@@ -139,8 +140,8 @@ for (j in 1:10)
 {
   for (i in 1:20)
   {
-    # impforest_r=randomForest(combined$Deaths~., data=combined, ntree=(500+(j*50)),importance=TRUE, na.action = na.omit)
-    impforest_r=randomForest(combined$Recovered~., data=combined, ntree=(500+(j*50)),importance=TRUE, na.action = na.omit)
+    impforest_r=randomForest(combined$Deaths~., data=combined, ntree=(500+(j*50)),importance=TRUE, na.action = na.omit)
+    # impforest_r=randomForest(combined$Recovered~., data=combined, ntree=(500+(j*50)),importance=TRUE, na.action = na.omit)
     #impforest_r=randomForest(combined$Confirmed~., data=combined, ntree=(500+(j*50)),importance=TRUE, na.action = na.omit)
     
     pred_importance <- importance(impforest_r)
@@ -167,12 +168,12 @@ importance_reg <- data.frame(sort(rowMeans(cbind(y[[1]], y[[2]], y[[3]], y[[4]],
 # combined_filtered <- combined[ , !names(combined) %in% rf_drop_list]
 
 ### APPROACH 2: Choose significant predictors
-#combined_selected <- combined[,c("Deaths","Obesity","Eggs","Alcoholic.Beverages",
-# "Oilcrops","fat_Vegetal.Products","Animal.Products",
-# "Vegetal.Products")]
+combined_selected <- combined[,c("Deaths","Obesity","Eggs","Alcoholic.Beverages",
+"Oilcrops","fat_Vegetal.Products","Animal.Products",
+"Vegetal.Products")]
 
-combined_selected <- combined[,c("Recovered","fat_Stimulants", "Obesity","Eggs",
-                                 "Fish..Seafood")]
+# combined_selected <- combined[,c("Recovered","fat_Stimulants", "Obesity","Eggs",
+#                                  "Fish..Seafood")]
 
 # combined_selected <- combined[,c("Confirmed", "Obesity","Eggs","Vegetal.Products",
 #                                  "Animal.Products")]
@@ -184,8 +185,8 @@ for (j in 1:10)
 {
   for (i in 1:20)
   {
-    #impforest_r=randomForest(combined_selected$Deaths~., data=combined_selected, ntree=(500+(j*50)),importance=TRUE, na.action = na.omit)
-    impforest_r=randomForest(combined_selected$Recovered~., data=combined_selected, ntree=(500+(j*50)),importance=TRUE, na.action = na.omit)
+    impforest_r=randomForest(combined_selected$Deaths~., data=combined_selected, ntree=(500+(j*50)),importance=TRUE, na.action = na.omit)
+    #impforest_r=randomForest(combined_selected$Recovered~., data=combined_selected, ntree=(500+(j*50)),importance=TRUE, na.action = na.omit)
     #impforest_r=randomForest(combined_selected$Confirmed~., data=combined_selected, ntree=(500+(j*50)),importance=TRUE, na.action = na.omit)
     pred_importance <- importance(impforest_r)
     pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
@@ -208,22 +209,22 @@ r2_list = rep(NA, 50)
 for (i in 1:50)
 {
   # Train test split
-  #sample = sample.split(combined_selected$Deaths, SplitRatio = .7)
-  sample = sample.split(combined_selected$Recovered, SplitRatio = .7)
+  sample = sample.split(combined_selected$Deaths, SplitRatio = .7)
+  #sample = sample.split(combined_selected$Recovered, SplitRatio = .7)
   #sample = sample.split(combined_selected$Confirmed, SplitRatio = .7)
   train = subset(combined_selected, sample == TRUE)
   test  = subset(combined_selected, sample == FALSE)
   
   # Build model with training data
-  #testforest=randomForest(train$Deaths~., data=train, ntree=1000,importance=TRUE, na.action = na.omit)
-  testforest=randomForest(train$Recovered~., data=train, ntree=1000,importance=TRUE, na.action = na.omit)
+  testforest=randomForest(train$Deaths~., data=train, ntree=1000,importance=TRUE, na.action = na.omit)
+  #testforest=randomForest(train$Recovered~., data=train, ntree=1000,importance=TRUE, na.action = na.omit)
   # testforest=randomForest(train$Confirmed~., data=train, ntree=1000,importance=TRUE, na.action = na.omit)
   
   # Run predictions
   predicted_score = predict(testforest, newdata=test)
   r2_list[i] <- mean(testforest$rsq)
-  #accuracy_list[i] <- mean((predicted_score - test$Deaths)^2)
-  accuracy_list[i] <- mean((predicted_score - test$Recovered)^2)
+  accuracy_list[i] <- mean((predicted_score - test$Deaths)^2)
+  #accuracy_list[i] <- mean((predicted_score - test$Recovered)^2)
   # accuracy_list[i] <- mean((predicted_score - test$Confirmed)^2)
 }
 mean(accuracy_list)
@@ -322,7 +323,7 @@ for (j in 1:10)
 {
   for (i in 1:20)
   {
-    impforest=randomForest(combinedcat_selected$Confirmed_cat~., data=combinedcat_selected, ntree=(500+(j*50)),importance=TRUE, na.action = na.omit)
+    impforest=randomForest(combinedcat_selected$Deaths_cat~., data=combinedcat_selected, ntree=(500+(j*50)),importance=TRUE, na.action = na.omit)
     
     pred_importance <- importance(impforest)
     pred_importance <- pred_importance[order(pred_importance[,1],decreasing=TRUE),]
@@ -371,8 +372,7 @@ predict(testforestcat,data.frame(Obesity=20.4,Animal.Products=20.0,Eggs=2.4,
                                  Animal.fats = 0.67, Vegetal.Products=0.5, Fish..Seafood=9.0,
                                  fat_Milk...Excluding.Butter = 15.0,kcal_Sugar...Sweeteners = 7,
                                  Treenuts = 0.54, fat_Cereals...Excluding.Beer = 7.0,
-                                 Alcoholic.Beverages = 3.0
-))
+                                 Alcoholic.Beverages = 3.0))
 
 ##### Random Forest: Importance Score Visualization #####
 
@@ -417,23 +417,29 @@ importance_plot <- function(importance, var){
   print(fin_plot)
 }
 
+### Read saved importance values and print to console
 
-# [ADD COMMENT - ZACK]
+# Importance values for target Confirmed - Categorical Forest
 importance <- read.csv("importance_reg_confirmed.csv")
 importance_plot(importance, "Confirmed (Regression)")
 
+# Importance values for target Recovered - Categorical Forest
 importance <- read.csv("importance_cat_recovered.csv")
 importance_plot(importance, "Recovered (Categorical)")
 
-importance <- read.csv("importance_reg_deaths.csv")
-importance_plot(importance, "Deaths (Regression)")
-
+# Importance values for target Deaths - Categorical Forest
 importance <- read.csv("importance_cat_deaths.csv")
 importance_plot(importance, "Deaths (Categorical)")
 
+# Importance values for target Deaths - Regression Forest
+importance <- read.csv("importance_reg_deaths.csv")
+importance_plot(importance, "Deaths (Regression)")
+
+# Importance values for target Recovered - Regression Forest
 importance <- read.csv("importance_reg_recovered.csv")
 importance_plot(importance, "Recovered (Regression)")
 
+# Importance values for target Confirmed - Regression Forest
 importance <- read.csv("importance_cat_confirmed.csv")
 importance_plot(importance, "Confirmed (Categorical)")
 
@@ -445,8 +451,6 @@ sample = sample.split(combined_selected$Deaths, SplitRatio = .7)
 train = subset(combined_selected, sample == TRUE)
 test  = subset(combined_selected, sample == FALSE)
 
-# distribution="gaussian"  is used for regression problems
-# interaction.depth=4  is the number of nodes in each tree
 boosted=gbm(train$Deaths~., data = train,
             distribution="gaussian",n.trees=10000, interaction.depth=4)
 summary(boosted)
